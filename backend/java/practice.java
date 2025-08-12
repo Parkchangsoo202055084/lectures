@@ -1,12 +1,16 @@
 public class practice {
 
     public static void main(String[] args) {
-        String str1 = "Admin";
-        String str2 = "admin";
-        if (str1.equalsIgnoreCase(str2))
-            System.out.println("로그인 성공");
-        else
-            System.out.print("아이디가 일치하지 않습니다 \n");
-
+        String[] words = {"banana","apple","cherry"};
+        int score = 85;
+        if (score >= 90) {
+            System.out.println("A 등급입니다.");
+        } else if (score >= 80) {
+            System.out.println("B 등급입니다.");
+        } else if (score >= 70) {
+            System.out.println("C 등급입니다.");
+        } else {
+            System.out.println("F 등급입니다.");
+        }
     }
 }
