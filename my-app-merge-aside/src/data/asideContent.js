@@ -79,7 +79,8 @@ export const ASIDE_CONTENT = {
     club: { title: "동아리", items: ["중앙동아리", "가입방법"] },
     assist: {
       title: "학생지원",
-      items: ["장학금", "상담센터", "학습지원", "교내 전화번호", "QA"],
+      // ✅ "QA"를 "Q&A"로 변경
+      items: ["장학금", "상담센터", "학습지원", "교내 전화번호", "Q&A"],
     },
   },
   en: {
@@ -160,7 +161,8 @@ export const ASIDE_CONTENT = {
     club: { title: "Clubs", items: ["Central Clubs", "How to Join"] },
     assist: {
       title: "Student Support",
-      items: ["Scholarship", "Counseling Center", "Academic Support", "Phone Numbers", "QA"],
+      // ✅ "QA"를 "Q&A"로 변경
+      items: ["Scholarship", "Counseling Center", "Academic Support", "Phone Numbers", "Q&A"],
     },
   },
 };

@@ -11,12 +11,12 @@ export default function AssistDetail({ selected, texts }) {
     );
   }
 
-  // ✅ 1. QA 항목이 선택되었는지 먼저 확인하고 렌더링합니다.
-  if (selected === texts.assistDetails.QA.title) {
-    return <QA texts={texts.assistDetails.QA} />;
+  // ✅ Q&A 항목 확인을 더 안전하게 처리
+  if (selected === "Q&A" || selected === "QA") {
+    return <QA texts={texts.assistDetails["Q&A"]} />;
   }
 
-  // ✅ 2. 그 외 항목에 대한 데이터를 찾습니다.
+  // ✅ 그 외 항목에 대한 데이터를 찾습니다.
   const data = texts.assistDetails[selected];
 
   if (!data) {
@@ -28,7 +28,7 @@ export default function AssistDetail({ selected, texts }) {
     );
   }
 
-  // ✅ 3. 일반 항목의 내용을 렌더링합니다.
+  // ✅ 일반 항목의 내용을 렌더링합니다.
   return (
     <div
       style={{
