@@ -11,6 +11,11 @@ export const texts = {
       langButton: "English",
       logoAlt: "한신대학교 로고",
     },
+    auth: {
+      login: "로그인",
+      logout: "로그아웃",
+      welcome: "환영합니다"
+    },
     mapDetails: {
       title: "층별 정보",
       floorsLabel: "층",
@@ -171,6 +176,11 @@ export const texts = {
       searchNoResult: "No search results found. (Try searching for buildings/facilities)",
       langButton: "한국어",
       logoAlt: "Hanshin University Logo",
+    },
+    auth: {
+      login: "Login",
+      logout: "Logout", 
+      welcome: "Welcome"
     },
     mapDetails: {
       title: "Floor Information",

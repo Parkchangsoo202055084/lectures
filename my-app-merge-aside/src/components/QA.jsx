@@ -1,20 +1,40 @@
 // src/components/QA.jsx
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import styled from "styled-components";
-import { db } from '../firebase';
-// ✅ updateDoc을 추가로 임포트합니다.
+import { db, auth } from '../firebase'; // auth 추가
 import { collection, getDocs, addDoc, doc, deleteDoc, updateDoc } from "firebase/firestore";
 
-const QAContainer = styled.div`
+const CommunityContainer = styled.div`
   padding: 20px;
   background: #fff;
   border: 1px solid #eee;
   border-radius: 12px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 `;
 
-const QuestionForm = styled.form`
+const TabContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+  gap: 10px;
+`;
+
+const TabButton = styled.button`
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  background-color: ${(props) => (props.active ? '#007bff' : '#f0f0f0')};
+  color: ${(props) => (props.active ? '#fff' : '#333')};
+  cursor: pointer;
+  transition: background-color 0.3s;
+  &:hover {
+    background-color: ${(props) => (props.active ? '#0056b3' : '#e0e0e0')};
+  }
+`;
+
+const PostForm = styled.form`
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -24,33 +44,43 @@ const QuestionForm = styled.form`
   border-radius: 8px;
 `;
 
-const QuestionList = styled.div`
+const PostList = styled.div`
   display: flex;
   flex-direction: column;
   gap: 15px;
 `;
 
-const QuestionItem = styled.div`
-  border-bottom: 1px solid #eee;
-  padding-bottom: 15px;
+const PostItem = styled.div`
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 15px;
+  background: #f9f9f9;
 `;
 
-const Title = styled.h4`
+const PostTitle = styled.h4`
   margin: 0;
   cursor: pointer;
   color: #333;
 `;
 
-const Content = styled.p`
-  margin: 8px 0 0;
+const PostContent = styled.p`
+  margin: 10px 0 0;
   color: #666;
+  white-space: pre-wrap;
 `;
 
-const Answer = styled.div`
+const ActionButtons = styled.div`
+  display: flex;
+  gap: 8px;
   margin-top: 10px;
+`;
+
+const AnswerSection = styled.div`
+  margin-top: 15px;
   padding: 10px;
-  background: #f9f9f9;
-  border-left: 3px solid #007bff;
+  background: #fff;
+  border-left: 3px solid #28a745;
+  border-radius: 4px;
 `;
 
 const PasswordModal = styled.div`
@@ -68,255 +98,388 @@ const PasswordModal = styled.div`
   gap: 15px;
 `;
 
-// ✅ 관리자 답글 폼을 위한 스타일
-const AdminForm = styled.div`
-  margin-top: 10px;
-  padding: 10px;
-  background: #f9f9f9;
-  border-radius: 8px;
+const Button = styled.button`
+  padding: 8px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  color: white;
+  background-color: ${(props) => {
+    switch (props.btnType) {
+      case 'edit':
+        return '#ffc107';
+      case 'delete':
+        return '#dc3545';
+      case 'submit':
+        return '#007bff';
+      case 'answer':
+        return '#28a745';
+      case 'user-answer':
+        return '#17a2b8';
+      default:
+        return '#6c757d';
+    }
+  }};
+  &:hover {
+    opacity: 0.9;
+  }
+`;
+
+const FreePostItem = styled(PostItem)`
+  background: #e9f5ff;
 `;
 
 export default function QA() {
-  const [questions, setQuestions] = useState([]);
-  const [newQuestion, setNewQuestion] = useState({
+  const [activeTab, setActiveTab] = useState('qa');
+  const [posts, setPosts] = useState([]);
+  const [newPost, setNewPost] = useState({
     title: "",
     content: "",
     password: "",
     isPrivate: false,
-    answer: null,
   });
-  const [showPasswordModal, setShowPasswordModal] = useState(false);
-  const [passwordToDelete, setPasswordToDelete] = useState("");
-  const [selectedQuestion, setSelectedQuestion] = useState(null);
-  const [privatePassword, setPrivatePassword] = useState({});
-  // ✅ 관리자 상태와 답글 상태 추가
   const [isAdmin, setIsAdmin] = useState(false);
-  const [answerContent, setAnswerContent] = useState('');
-  
-  // ✅ 임시 관리자 비밀번호. 실제 서비스에서는 절대 이렇게 사용하면 안 됩니다.
-  const ADMIN_PASSWORD = "admin";
+  const [expandedId, setExpandedId] = useState(null);
+  const [editingId, setEditingId] = useState(null);
+  const [editingContent, setEditingContent] = useState("");
+  const [editingTitle, setEditingTitle] = useState("");
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [passwordAction, setPasswordAction] = useState({ type: null, postId: null });
+  const [passwordInput, setPasswordInput] = useState("");
+  const [commentInput, setCommentInput] = useState("");
+  const [user, setUser] = useState(null);
 
-  const fetchQuestions = async () => {
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged(currentUser => {
+      setUser(currentUser);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const fetchPosts = useCallback(async () => {
+    const collectionName = activeTab === 'qa' ? 'questions' : 'free';
     try {
-      const querySnapshot = await getDocs(collection(db, "questions"));
-      const qList = querySnapshot.docs.map(doc => ({
+      const querySnapshot = await getDocs(collection(db, collectionName));
+      const postList = querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       }));
-      setQuestions(qList);
+      setPosts(postList);
     } catch (e) {
       console.error("Error fetching documents: ", e);
+      setPosts([]);
     }
-  };
+  }, [activeTab]);
 
   useEffect(() => {
-    fetchQuestions();
-  }, []);
+    fetchPosts();
+  }, [fetchPosts]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("handleSubmit 함수가 실행되었습니다."); 
-    if (!newQuestion.title || !newQuestion.content || !newQuestion.password) {
+    if (!newPost.title || !newPost.content || !newPost.password) {
       alert("제목, 내용, 비밀번호를 모두 입력해주세요.");
       return;
     }
+    const collectionName = activeTab === 'qa' ? 'questions' : 'free';
+    const postData = {
+        title: newPost.title,
+        content: newPost.content,
+        password: newPost.password,
+        comments: [],
+        author_uid: user ? user.uid : 'anonymous',
+    };
+
+    if (activeTab === 'qa') {
+        postData.isPrivate = newPost.isPrivate;
+    }
+    
     try {
-      const docRef = await addDoc(collection(db, "questions"), newQuestion);
-      console.log("Document written with ID: ", docRef.id);
-      setNewQuestion({ title: "", content: "", password: "", isPrivate: false, answer: null });
-      fetchQuestions();
+      await addDoc(collection(db, collectionName), postData);
+      setNewPost({ title: "", content: "", password: "", isPrivate: false });
+      fetchPosts();
     } catch (e) {
       console.error("Error adding document: ", e);
     }
   };
 
-  const handleDelete = async (questionId) => {
+  const handleToggleExpand = (id, isPrivate) => {
+    if (expandedId === id) {
+      setExpandedId(null);
+      return;
+    }
+    if (isPrivate && activeTab === 'qa' && !isAdmin) {
+      setPasswordAction({ type: 'view', postId: id });
+      setShowPasswordModal(true);
+      return;
+    }
+    setExpandedId(id);
+  };
+
+  const handleEditClick = (post) => {
+    setEditingId(post.id);
+    setEditingTitle(post.title);
+    setEditingContent(post.content);
+  };
+
+  const handleUpdate = async (postId, currentPassword) => {
+    const collectionName = activeTab === 'qa' ? 'questions' : 'free';
+    const post = posts.find(p => p.id === postId);
+    if (!isAdmin && post.password !== currentPassword) {
+      alert("비밀번호가 일치하지 않습니다.");
+      return;
+    }
     try {
-      // ✅ 관리자 모드일 경우 비밀번호 확인 없이 바로 삭제
-      if (isAdmin) {
-        await deleteDoc(doc(db, "questions", questionId));
-        console.log("Document successfully deleted!");
-        fetchQuestions();
-        return;
+      const postRef = doc(db, collectionName, postId);
+      await updateDoc(postRef, {
+        title: editingTitle,
+        content: editingContent
+      });
+      setEditingId(null);
+      fetchPosts();
+    } catch (e) {
+      console.error("Error updating document: ", e);
+      alert("글 수정에 실패했습니다.");
+    }
+  };
+
+  const handleDelete = async (postId, currentPassword) => {
+    const collectionName = activeTab === 'qa' ? 'questions' : 'free';
+    try {
+      if (!isAdmin) {
+        const post = posts.find(p => p.id === postId);
+        if (post.password !== currentPassword) {
+          alert("비밀번호가 일치하지 않습니다.");
+          return;
+        }
       }
-      
-      const question = questions.find(q => q.id === questionId);
-      if (question.password !== passwordToDelete) {
-        alert("비밀번호가 일치하지 않습니다.");
-        return;
-      }
-      await deleteDoc(doc(db, "questions", questionId));
-      console.log("Document successfully deleted!");
-      fetchQuestions();
+      await deleteDoc(doc(db, collectionName, postId));
+      fetchPosts();
       setShowPasswordModal(false);
-      setPasswordToDelete("");
+      setPasswordInput("");
     } catch (e) {
       console.error("Error removing document: ", e);
     }
   };
 
-  const openDeleteModal = (question) => {
-    setSelectedQuestion(question);
-    // ✅ 관리자 모드일 경우 바로 삭제
-    if (isAdmin) {
-      handleDelete(question.id);
-    } else {
-      // ✅ 일반 사용자일 경우 비밀번호 모달 표시
-      setShowPasswordModal(true);
-    }
-  };
-  
-  const handlePrivateContent = (qId) => {
-    const enteredPassword = prompt("비밀번호를 입력하세요.");
-    const question = questions.find(q => q.id === qId);
-    if(question.password === enteredPassword || isAdmin) {
-      setPrivatePassword({...privatePassword, [qId]: true});
+  const handlePasswordSubmit = () => {
+    const { type, postId } = passwordAction;
+    const post = posts.find(p => p.id === postId);
+
+    if (isAdmin || post.password === passwordInput) {
+      if (type === 'view') {
+        setExpandedId(postId);
+      } else if (type === 'edit') {
+        handleUpdate(postId, passwordInput);
+      } else if (type === 'delete') {
+        handleDelete(postId, passwordInput);
+      }
+      setShowPasswordModal(false);
+      setPasswordInput("");
     } else {
       alert("비밀번호가 일치하지 않습니다.");
     }
   };
   
-  // ✅ 답변 제출 핸들러 함수
-  const handleAnswerSubmit = async (e) => {
-      e.preventDefault();
-      if (!selectedQuestion || !answerContent) {
-          alert('답변 내용을 입력해주세요.');
-          return;
-      }
-      try {
-          const docRef = doc(db, 'questions', selectedQuestion.id);
-          await updateDoc(docRef, {
-              answer: answerContent
-          });
-          alert('답변이 성공적으로 등록되었습니다.');
-          setAnswerContent('');
-          setSelectedQuestion(null);
-          fetchQuestions();
-      } catch (e) {
-          console.error("Error updating document: ", e);
-          alert('답변 등록에 실패했습니다.');
-      }
-  };
-
-  // ✅ 관리자 모드 전환 핸들러
-  const handleAdminLogin = () => {
-    const enteredPassword = prompt("관리자 비밀번호를 입력하세요.");
-    if (enteredPassword === ADMIN_PASSWORD) {
-      setIsAdmin(true);
-      alert('관리자 모드로 전환되었습니다.');
-    } else {
-      alert('비밀번호가 일치하지 않습니다.');
+  const handleCommentSubmit = async (e, postId) => {
+    e.preventDefault();
+    if (!commentInput) {
+      alert('답글 내용을 입력해주세요.');
+      return;
+    }
+    const collectionName = activeTab === 'qa' ? 'questions' : 'free';
+    const post = posts.find(p => p.id === postId);
+    const newComment = {
+      content: commentInput,
+      timestamp: new Date().toISOString(),
+      is_admin: isAdmin,
+      author_uid: user ? user.uid : 'anonymous',
+    };
+    
+    try {
+      const docRef = doc(db, collectionName, postId);
+      await updateDoc(docRef, {
+        comments: [...(post.comments || []), newComment]
+      });
+      setCommentInput('');
+      fetchPosts();
+    } catch (e) {
+      console.error("Error updating document: ", e);
+      alert('답글 등록에 실패했습니다.');
     }
   };
 
-  return (
-    <QAContainer>
-      <h2>🙋‍♀️ Q&A 게시판</h2>
-      <p style={{color: "#666"}}>궁금한 점을 질문하고, 관리자의 답변을 받아보세요.</p>
-      
-      {/* ✅ 관리자 모드 버튼 추가 */}
-      {!isAdmin && <button onClick={handleAdminLogin}>관리자 로그인</button>}
-      {isAdmin && <p>관리자 모드입니다. 답변을 달 수 있습니다.</p>}
+  const handleDeleteComment = async (postId, commentIndex, commentAuthorId) => {
+    if (user && user.uid !== commentAuthorId && !isAdmin) {
+        alert("자신이 작성한 답글만 삭제할 수 있습니다.");
+        return;
+    }
 
-      <QuestionForm onSubmit={handleSubmit}>
+    const collectionName = activeTab === 'qa' ? 'questions' : 'free';
+    const post = posts.find(p => p.id === postId);
+    const updatedComments = post.comments.filter((_, index) => index !== commentIndex);
+
+    try {
+      const docRef = doc(db, collectionName, postId);
+      await updateDoc(docRef, { comments: updatedComments });
+      fetchPosts();
+    } catch (e) {
+      console.error("Error deleting comment: ", e);
+      alert("답글 삭제에 실패했습니다.");
+    }
+  };
+
+  const renderPostItem = (post) => {
+    const PostComponent = activeTab === 'qa' ? PostItem : FreePostItem;
+    return (
+      <PostComponent key={post.id}>
+        <PostTitle onClick={() => handleToggleExpand(post.id, post.isPrivate)}>
+          {activeTab === 'qa' && post.isPrivate ? "🔒" : "📢"}{' '}
+          {post.title}
+        </PostTitle>
+        {expandedId === post.id && (
+          <>
+            {editingId === post.id ? (
+              <>
+                <input
+                  type="text"
+                  value={editingTitle}
+                  onChange={(e) => setEditingTitle(e.target.value)}
+                  style={{ width: '100%', margin: '10px 0' }}
+                />
+                <textarea
+                  value={editingContent}
+                  onChange={(e) => setEditingContent(e.target.value)}
+                  style={{ width: '100%', minHeight: '80px' }}
+                />
+                <ActionButtons>
+                  <Button btnType="submit" onClick={() => { setPasswordAction({ type: 'edit', postId: post.id }); setShowPasswordModal(true); }}>수정 완료</Button>
+                  <Button btnType="default" onClick={() => setEditingId(null)}>취소</Button>
+                </ActionButtons>
+              </>
+            ) : (
+              <>
+                <PostContent>{post.content}</PostContent>
+                <ActionButtons>
+                  <Button btnType="edit" onClick={() => handleEditClick(post)}>수정</Button>
+                  <Button btnType="delete" onClick={() => { setPasswordAction({ type: 'delete', postId: post.id }); setShowPasswordModal(true); }}>삭제</Button>
+                </ActionButtons>
+                
+                {post.comments && post.comments.map((comment, index) => (
+                  <AnswerSection key={index}>
+                    <p>
+                      <strong>[{comment.is_admin ? "관리자" : "사용자"}] 답글:</strong>{' '}
+                      {comment.content}
+                      {(isAdmin || (user && user.uid === comment.author_uid)) && (
+                        <Button onClick={() => handleDeleteComment(post.id, index, comment.author_uid)} style={{ marginLeft: '10px', backgroundColor: '#dc3545', padding: '5px 8px', fontSize: '12px' }}>삭제</Button>
+                      )}
+                    </p>
+                  </AnswerSection>
+                ))}
+                
+                <div style={{ marginTop: '15px' }}>
+                  <form onSubmit={(e) => handleCommentSubmit(e, post.id)}>
+                    <textarea
+                      placeholder="답글 내용을 입력하세요..."
+                      value={commentInput}
+                      onChange={(e) => setCommentInput(e.target.value)}
+                      style={{ width: '100%', minHeight: '60px', padding: '8px' }}
+                    />
+                    <Button type="submit" btnType="user-answer">답글 등록</Button>
+                  </form>
+                </div>
+              </>
+            )}
+          </>
+        )}
+      </PostComponent>
+    );
+  };
+  
+  return (
+    <CommunityContainer>
+      <TabContainer>
+        <TabButton
+          active={activeTab === 'qa'}
+          onClick={() => setActiveTab('qa')}
+        >
+          QA 게시판
+        </TabButton>
+        <TabButton
+          active={activeTab === 'free'}
+          onClick={() => setActiveTab('free')}
+        >
+          자유 게시판
+        </TabButton>
+      </TabContainer>
+
+      <h2>📖 {activeTab === 'qa' ? 'Q&A 게시판' : '자유 게시판'}</h2>
+      
+      <hr />
+
+      <PostForm onSubmit={handleSubmit}>
         <input
           type="text"
           placeholder="제목"
-          value={newQuestion.title}
-          onChange={(e) => setNewQuestion({ ...newQuestion, title: e.target.value })}
+          value={newPost.title}
+          onChange={(e) => setNewPost({ ...newPost, title: e.target.value })}
           style={{ padding: "10px", border: "1px solid #ddd" }}
         />
         <textarea
           placeholder="내용"
-          value={newQuestion.content}
-          onChange={(e) => setNewQuestion({ ...newQuestion, content: e.target.value })}
+          value={newPost.content}
+          onChange={(e) => setNewPost({ ...newPost, content: e.target.value })}
           style={{ padding: "10px", border: "1px solid #ddd", minHeight: "80px" }}
         />
         <input
           type="password"
-          placeholder="비밀번호 (삭제 시 필요)"
-          value={newQuestion.password}
-          onChange={(e) => setNewQuestion({ ...newQuestion, password: e.target.value })}
+          placeholder="비밀번호 (수정/삭제 시 필요)"
+          value={newPost.password}
+          onChange={(e) => setNewPost({ ...newPost, password: e.target.value })}
           style={{ padding: "10px", border: "1px solid #ddd" }}
         />
-        <label>
-          <input
-            type="checkbox"
-            checked={newQuestion.isPrivate}
-            onChange={(e) => setNewQuestion({ ...newQuestion, isPrivate: e.target.checked })}
-          />
-          비밀글 (관리자만 확인 가능)
-        </label>
-        <button type="submit" style={{ padding: "10px", background: "#007bff", color: "#fff", border: "none", borderRadius: "4px", cursor: "pointer" }}>
-          질문 올리기
-        </button>
-      </QuestionForm>
+        {activeTab === 'qa' && (
+          <label>
+            <input
+              type="checkbox"
+              checked={newPost.isPrivate}
+              onChange={(e) => setNewPost({ ...newPost, isPrivate: e.target.checked })}
+            />
+            비밀글 (비밀번호 입력 시 열람 가능)
+          </label>
+        )}
+        <Button type="submit" btnType="submit">글 올리기</Button>
+      </PostForm>
+      
+      <hr />
 
-      <QuestionList>
-        {questions.map((q) => (
-          <QuestionItem key={q.id}>
-            <div style={{display: "flex", justifyContent: "space-between", alignItems: "center"}}>
-              <Title onClick={() => q.isPrivate && handlePrivateContent(q.id)}>
-                {q.isPrivate ? "🔒 비밀글" : "📢 공개글"} - {q.title}
-              </Title>
-              <div style={{display: 'flex', gap: '8px'}}>
-                {/* ✅ 관리자 모드일 경우 답글 달기 버튼 표시 */}
-                {isAdmin && !q.answer && (
-                    <button onClick={() => setSelectedQuestion(q)} style={{background: "#28a745", border: "none", color: "#fff", padding: "4px 8px", borderRadius: "4px", cursor: "pointer"}}>답변 달기</button>
-                )}
-                {/* ✅ 일반 사용자는 모달, 관리자는 즉시 삭제 */}
-                <button onClick={() => openDeleteModal(q)} style={{background: "none", border: "none", color: "red", cursor: "pointer"}}>삭제</button>
-              </div>
-            </div>
-            {q.isPrivate ? (
-              privatePassword[q.id] ? (
-                <Content>{q.content}</Content>
-              ) : (
-                <Content style={{color: '#999'}}>비밀글입니다. 제목을 클릭해 비밀번호를 입력하세요.</Content>
-              )
-            ) : (
-              <Content>{q.content}</Content>
-            )}
-            {q.answer && (
-              <Answer>
-                <p><strong>[관리자 답변]</strong> {q.answer}</p>
-              </Answer>
-            )}
-            {/* ✅ 선택된 질문에 대한 답글 폼 */}
-            {isAdmin && selectedQuestion?.id === q.id && (
-                <AdminForm>
-                    <form onSubmit={handleAnswerSubmit}>
-                        <textarea
-                            placeholder="답변 내용을 입력하세요..."
-                            value={answerContent}
-                            onChange={(e) => setAnswerContent(e.target.value)}
-                            style={{ width: '100%', minHeight: '60px', padding: '8px' }}
-                        />
-                        <button type="submit">답변 등록</button>
-                    </form>
-                </AdminForm>
-            )}
-          </QuestionItem>
-        ))}
-      </QuestionList>
+      <PostList>
+        {posts.map(renderPostItem)}
+      </PostList>
 
       {showPasswordModal && (
         <PasswordModal>
           <h3>비밀번호 확인</h3>
-          <p>글을 삭제하려면 비밀번호를 입력하세요.</p>
+          <p>글 {passwordAction.type === 'delete' ? '삭제' : '수정'}를 위해 비밀번호를 입력하세요.</p>
           <input
             type="password"
             placeholder="비밀번호"
-            value={passwordToDelete}
-            onChange={(e) => setPasswordToDelete(e.target.value)}
+            value={passwordInput}
+            onChange={(e) => setPasswordInput(e.target.value)}
             style={{ padding: "10px", border: "1px solid #ddd" }}
           />
           <div>
-            <button onClick={() => handleDelete(selectedQuestion.id)} style={{ padding: "8px 12px", marginRight: "10px" }}>확인</button>
-            <button onClick={() => setShowPasswordModal(false)} style={{ padding: "8px 12px" }}>취소</button>
+            <Button btnType="submit" onClick={handlePasswordSubmit}>확인</Button>
+            <Button btnType="default" onClick={() => setShowPasswordModal(false)}>취소</Button>
           </div>
         </PasswordModal>
       )}
-    </QAContainer>
+
+      <div style={{ position: 'fixed', bottom: '20px', right: '20px' }}>
+        <button onClick={() => setIsAdmin(prev => !prev)} style={{ padding: '10px', backgroundColor: isAdmin ? 'red' : 'green', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>
+          {isAdmin ? '관리자 모드 해제' : '관리자 모드 활성화'}
+        </button>
+      </div>
+    </CommunityContainer>
   );
 }
