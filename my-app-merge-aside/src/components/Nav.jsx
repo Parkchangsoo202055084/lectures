@@ -1,11 +1,11 @@
-// FILE: src/components/Nav.jsx
 import logo from "../images/hanshin.png";
 import styles from "./Nav.module.css";
 import { useState } from "react";
+import { useAuth } from "../hooks/useAuth";
 
-// ✅ export 방식 수정
 export const Nav = ({ activeTab, setActiveTab, onSearch, texts, onToggleLang }) => {
   const [query, setQuery] = useState("");
+  const { user, loading, login, logout } = useAuth();
 
   const tabs = [
     { id: "map", label: texts.aside.map.title },
@@ -26,6 +26,14 @@ export const Nav = ({ activeTab, setActiveTab, onSearch, texts, onToggleLang }) 
 
   const goToHome = () => {
     setActiveTab("map");
+  };
+
+  const handleAuthClick = async () => {
+    if (user) {
+      await logout();
+    } else {
+      await login();
+    }
   };
 
   return (
@@ -50,9 +58,32 @@ export const Nav = ({ activeTab, setActiveTab, onSearch, texts, onToggleLang }) 
             🔍
           </button>
         </div>
-        <button className={styles["lang-btn"]} onClick={onToggleLang}>
-          {texts.nav.langButton}
-        </button>
+        <div className={styles["auth-lang-container"]}>
+          {user && (
+            <div className={styles["user-info"]}>
+              {user.photoURL && (
+                <img
+                  src={user.photoURL}
+                  alt="Profile"
+                  className={styles["profile-img"]}
+                />
+              )}
+              <span className={styles["user-name"]}>
+                {user.displayName || user.email}
+              </span>
+            </div>
+          )}
+          <button
+            className={styles["auth-btn"]}
+            onClick={handleAuthClick}
+            disabled={loading}
+          >
+            {loading ? "..." : (user ? texts.auth.logout : texts.auth.login)}
+          </button>
+          <button className={styles["lang-btn"]} onClick={onToggleLang}>
+            {texts.nav.langButton}
+          </button>
+        </div>
       </div>
 
       <nav className={styles["nav-bar"]}>
