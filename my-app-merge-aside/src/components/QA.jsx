@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import styled from "styled-components";
-import { db, auth } from '../firebase'; // auth 추가
-import { collection, getDocs, addDoc, doc, deleteDoc, updateDoc } from "firebase/firestore";
+import { db, auth } from '../firebase';
+import { collection, getDocs, addDoc, doc, deleteDoc, updateDoc, getDoc, setDoc } from "firebase/firestore";
 
 const CommunityContainer = styled.div`
   padding: 20px;
@@ -98,6 +98,19 @@ const PasswordModal = styled.div`
   gap: 15px;
 `;
 
+const AdminPanel = styled.div`
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: #fff;
+  border: 2px solid #007bff;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  min-width: 300px;
+`;
+
 const Button = styled.button`
   padding: 8px 12px;
   border: none;
@@ -116,6 +129,8 @@ const Button = styled.button`
         return '#28a745';
       case 'user-answer':
         return '#17a2b8';
+      case 'admin':
+        return '#6f42c1';
       default:
         return '#6c757d';
     }
@@ -127,6 +142,18 @@ const Button = styled.button`
 
 const FreePostItem = styled(PostItem)`
   background: #e9f5ff;
+`;
+
+const UserStatusDisplay = styled.div`
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  background: ${props => props.isAdmin ? '#28a745' : '#17a2b8'};
+  color: white;
+  padding: 10px 15px;
+  border-radius: 8px;
+  font-weight: bold;
+  z-index: 1000;
 `;
 
 export default function QA() {
@@ -148,13 +175,153 @@ export default function QA() {
   const [passwordInput, setPasswordInput] = useState("");
   const [commentInput, setCommentInput] = useState("");
   const [user, setUser] = useState(null);
+  const [showAdminPanel, setShowAdminPanel] = useState(false);
+  const [adminEmail, setAdminEmail] = useState("");
+  const [users, setUsers] = useState([]);
 
+  // 사용자 인증 상태 체크
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged(currentUser => {
+    const unsubscribe = auth.onAuthStateChanged(async (currentUser) => {
       setUser(currentUser);
+      if (currentUser) {
+        // 사용자가 로그인했을 때 관리자 권한 확인
+        await checkAdminStatus(currentUser.uid);
+        // 사용자 정보를 Firestore에 저장/업데이트
+        await createOrUpdateUserDoc(currentUser);
+      } else {
+        setIsAdmin(false);
+      }
     });
     return () => unsubscribe();
   }, []);
+
+  // 사용자 문서 생성/업데이트
+  const createOrUpdateUserDoc = async (currentUser) => {
+    try {
+      const userRef = doc(db, 'users', currentUser.uid);
+      const userDoc = await getDoc(userRef);
+      
+      if (!userDoc.exists()) {
+        // 새 사용자인 경우 문서 생성
+        await setDoc(userRef, {
+          email: currentUser.email,
+          displayName: currentUser.displayName || '',
+          isAdmin: false,
+          createdAt: new Date().toISOString(),
+          lastLogin: new Date().toISOString()
+        });
+      } else {
+        // 기존 사용자인 경우 마지막 로그인 시간 업데이트
+        await updateDoc(userRef, {
+          lastLogin: new Date().toISOString(),
+          email: currentUser.email,
+          displayName: currentUser.displayName || ''
+        });
+      }
+    } catch (error) {
+      console.error("Error creating/updating user document:", error);
+    }
+  };
+
+  // 관리자 권한 확인
+  const checkAdminStatus = async (uid) => {
+    try {
+      const userDoc = await getDoc(doc(db, 'users', uid));
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        
+        // 🚨 개발용: 특정 이메일을 자동으로 관리자로 설정
+        // 운영 환경에서는 이 부분을 제거해야 합니다!
+        const ADMIN_EMAILS = [
+          'admin@example.com',  // 여기에 관리자로 만들 이메일 추가
+          'your-email@gmail.com'  // 본인 이메일로 변경하세요
+        ];
+        
+        if (ADMIN_EMAILS.includes(userData.email)) {
+          // 자동으로 관리자 권한 부여
+          await updateDoc(doc(db, 'users', uid), { isAdmin: true });
+          setIsAdmin(true);
+          console.log(`🔥 ${userData.email}을 관리자로 자동 설정했습니다.`);
+          return;
+        }
+        
+        setIsAdmin(userData.isAdmin || false);
+      }
+    } catch (error) {
+      console.error("Error checking admin status:", error);
+    }
+  };
+
+  // 사용자 목록 불러오기 (관리자용)
+  const fetchUsers = async () => {
+    if (!isAdmin) return;
+    
+    try {
+      const querySnapshot = await getDocs(collection(db, 'users'));
+      const userList = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setUsers(userList);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (isAdmin) {
+      fetchUsers();
+    }
+  }, [isAdmin]);
+
+  // 관리자 권한 부여/제거
+  const toggleUserAdminStatus = async (userId, currentStatus) => {
+    if (!isAdmin) {
+      alert("관리자 권한이 필요합니다.");
+      return;
+    }
+
+    try {
+      await updateDoc(doc(db, 'users', userId), {
+        isAdmin: !currentStatus
+      });
+      
+      alert(`사용자 권한이 ${!currentStatus ? '관리자로' : '일반 사용자로'} 변경되었습니다.`);
+      fetchUsers(); // 사용자 목록 새로고침
+    } catch (error) {
+      console.error("Error updating user admin status:", error);
+      alert("권한 변경에 실패했습니다.");
+    }
+  };
+
+  // 이메일로 관리자 권한 부여
+  const grantAdminByEmail = async () => {
+    if (!adminEmail) {
+      alert("이메일을 입력해주세요.");
+      return;
+    }
+
+    try {
+      const usersSnapshot = await getDocs(collection(db, 'users'));
+      const userDoc = usersSnapshot.docs.find(doc => 
+        doc.data().email === adminEmail
+      );
+
+      if (userDoc) {
+        await updateDoc(doc(db, 'users', userDoc.id), {
+          isAdmin: true
+        });
+        alert("해당 사용자에게 관리자 권한을 부여했습니다.");
+        setAdminEmail("");
+        fetchUsers();
+      } else {
+        alert("해당 이메일로 가입된 사용자를 찾을 수 없습니다.");
+      }
+    } catch (error) {
+      console.error("Error granting admin by email:", error);
+      alert("관리자 권한 부여에 실패했습니다.");
+    }
+  };
 
   const fetchPosts = useCallback(async () => {
     const collectionName = activeTab === 'qa' ? 'questions' : 'free';
@@ -188,6 +355,8 @@ export default function QA() {
         password: newPost.password,
         comments: [],
         author_uid: user ? user.uid : 'anonymous',
+        author_email: user ? user.email : 'anonymous',
+        createdAt: new Date().toISOString(),
     };
 
     if (activeTab === 'qa') {
@@ -217,6 +386,12 @@ export default function QA() {
   };
 
   const handleEditClick = (post) => {
+    // 관리자가 아니고, 작성자도 아닌 경우 수정 불가
+    if (!isAdmin && (!user || user.uid !== post.author_uid)) {
+      alert("작성자 또는 관리자만 수정할 수 있습니다.");
+      return;
+    }
+    
     setEditingId(post.id);
     setEditingTitle(post.title);
     setEditingContent(post.content);
@@ -225,15 +400,25 @@ export default function QA() {
   const handleUpdate = async (postId, currentPassword) => {
     const collectionName = activeTab === 'qa' ? 'questions' : 'free';
     const post = posts.find(p => p.id === postId);
+    
+    // 관리자가 아니고, 작성자도 아닌 경우
+    if (!isAdmin && (!user || user.uid !== post.author_uid)) {
+      alert("작성자 또는 관리자만 수정할 수 있습니다.");
+      return;
+    }
+    
+    // 관리자가 아닌 경우 비밀번호 확인
     if (!isAdmin && post.password !== currentPassword) {
       alert("비밀번호가 일치하지 않습니다.");
       return;
     }
+    
     try {
       const postRef = doc(db, collectionName, postId);
       await updateDoc(postRef, {
         title: editingTitle,
-        content: editingContent
+        content: editingContent,
+        updatedAt: new Date().toISOString()
       });
       setEditingId(null);
       fetchPosts();
@@ -245,14 +430,21 @@ export default function QA() {
 
   const handleDelete = async (postId, currentPassword) => {
     const collectionName = activeTab === 'qa' ? 'questions' : 'free';
+    const post = posts.find(p => p.id === postId);
+    
     try {
-      if (!isAdmin) {
-        const post = posts.find(p => p.id === postId);
-        if (post.password !== currentPassword) {
-          alert("비밀번호가 일치하지 않습니다.");
-          return;
-        }
+      // 관리자가 아니고, 작성자도 아닌 경우
+      if (!isAdmin && (!user || user.uid !== post.author_uid)) {
+        alert("작성자 또는 관리자만 삭제할 수 있습니다.");
+        return;
       }
+      
+      // 관리자가 아닌 경우 비밀번호 확인
+      if (!isAdmin && post.password !== currentPassword) {
+        alert("비밀번호가 일치하지 않습니다.");
+        return;
+      }
+      
       await deleteDoc(doc(db, collectionName, postId));
       fetchPosts();
       setShowPasswordModal(false);
@@ -283,6 +475,10 @@ export default function QA() {
   
   const handleCommentSubmit = async (e, postId) => {
     e.preventDefault();
+    if (!user) {
+      alert('댓글 작성은 로그인한 사용자만 가능합니다.');
+      return;
+    }
     if (!commentInput) {
       alert('답글 내용을 입력해주세요.');
       return;
@@ -293,7 +489,8 @@ export default function QA() {
       content: commentInput,
       timestamp: new Date().toISOString(),
       is_admin: isAdmin,
-      author_uid: user ? user.uid : 'anonymous',
+      author_uid: user.uid,
+      author_email: user.email,
     };
     
     try {
@@ -336,6 +533,11 @@ export default function QA() {
         <PostTitle onClick={() => handleToggleExpand(post.id, post.isPrivate)}>
           {activeTab === 'qa' && post.isPrivate ? "🔒" : "📢"}{' '}
           {post.title}
+          {isAdmin && (
+            <span style={{ fontSize: '12px', color: '#666', marginLeft: '10px' }}>
+              (작성자: {post.author_email || 'unknown'})
+            </span>
+          )}
         </PostTitle>
         {expandedId === post.id && (
           <>
@@ -361,8 +563,13 @@ export default function QA() {
               <>
                 <PostContent>{post.content}</PostContent>
                 <ActionButtons>
-                  <Button btnType="edit" onClick={() => handleEditClick(post)}>수정</Button>
-                  <Button btnType="delete" onClick={() => { setPasswordAction({ type: 'delete', postId: post.id }); setShowPasswordModal(true); }}>삭제</Button>
+                  {/* 작성자 또는 관리자만 수정/삭제 버튼 표시 */}
+                  {(isAdmin || (user && user.uid === post.author_uid)) && (
+                    <>
+                      <Button btnType="edit" onClick={() => handleEditClick(post)}>수정</Button>
+                      <Button btnType="delete" onClick={() => { setPasswordAction({ type: 'delete', postId: post.id }); setShowPasswordModal(true); }}>삭제</Button>
+                    </>
+                  )}
                 </ActionButtons>
                 
                 {post.comments && post.comments.map((comment, index) => (
@@ -374,19 +581,51 @@ export default function QA() {
                         <Button onClick={() => handleDeleteComment(post.id, index, comment.author_uid)} style={{ marginLeft: '10px', backgroundColor: '#dc3545', padding: '5px 8px', fontSize: '12px' }}>삭제</Button>
                       )}
                     </p>
+                    {isAdmin && (
+                      <small style={{ color: '#666' }}>
+                        작성자: {comment.author_email || 'unknown'}
+                      </small>
+                    )}
                   </AnswerSection>
                 ))}
                 
                 <div style={{ marginTop: '15px' }}>
-                  <form onSubmit={(e) => handleCommentSubmit(e, post.id)}>
-                    <textarea
-                      placeholder="답글 내용을 입력하세요..."
-                      value={commentInput}
-                      onChange={(e) => setCommentInput(e.target.value)}
-                      style={{ width: '100%', minHeight: '60px', padding: '8px' }}
-                    />
-                    <Button type="submit" btnType="user-answer">답글 등록</Button>
-                  </form>
+                  {user ? (
+                    // 비밀글인 경우 관리자만 댓글 가능, 일반글은 모든 로그인 사용자 댓글 가능
+                    (activeTab === 'qa' && post.isPrivate && !isAdmin) ? (
+                      <div style={{ 
+                        padding: '15px', 
+                        backgroundColor: '#fff3cd', 
+                        border: '1px solid #ffeaa7', 
+                        borderRadius: '5px',
+                        textAlign: 'center',
+                        color: '#856404'
+                      }}>
+                        비밀글에는 관리자만 댓글을 작성할 수 있습니다.
+                      </div>
+                    ) : (
+                      <form onSubmit={(e) => handleCommentSubmit(e, post.id)}>
+                        <textarea
+                          placeholder="답글 내용을 입력하세요..."
+                          value={commentInput}
+                          onChange={(e) => setCommentInput(e.target.value)}
+                          style={{ width: '100%', minHeight: '60px', padding: '8px' }}
+                        />
+                        <Button type="submit" btnType="user-answer">답글 등록</Button>
+                      </form>
+                    )
+                  ) : (
+                    <div style={{ 
+                      padding: '15px', 
+                      backgroundColor: '#f8f9fa', 
+                      border: '1px solid #dee2e6', 
+                      borderRadius: '5px',
+                      textAlign: 'center',
+                      color: '#6c757d'
+                    }}>
+                      댓글 작성은 로그인한 사용자만 가능합니다.
+                    </div>
+                  )}
                 </div>
               </>
             )}
@@ -398,6 +637,76 @@ export default function QA() {
   
   return (
     <CommunityContainer>
+      {user && (
+        <UserStatusDisplay isAdmin={isAdmin}>
+          {isAdmin ? '👑 관리자' : '👤 사용자'}: {user.email}
+        </UserStatusDisplay>
+      )}
+
+      {isAdmin && (
+        <div style={{ position: 'fixed', bottom: '20px', right: '20px', zIndex: 1000 }}>
+          <Button btnType="admin" onClick={() => setShowAdminPanel(true)}>
+            관리자 패널
+          </Button>
+        </div>
+      )}
+
+      {showAdminPanel && isAdmin && (
+        <AdminPanel>
+          <h3>👑 관리자 패널</h3>
+          
+          <div style={{ marginBottom: '20px' }}>
+            <h4>이메일로 관리자 권한 부여</h4>
+            <input
+              type="email"
+              placeholder="사용자 이메일"
+              value={adminEmail}
+              onChange={(e) => setAdminEmail(e.target.value)}
+              style={{ width: '100%', padding: '8px', marginBottom: '10px' }}
+            />
+            <Button btnType="submit" onClick={grantAdminByEmail}>
+              관리자 권한 부여
+            </Button>
+          </div>
+
+          <div style={{ marginBottom: '20px' }}>
+            <h4>사용자 목록</h4>
+            <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
+              {users.map(userItem => (
+                <div key={userItem.id} style={{ 
+                  padding: '10px', 
+                  border: '1px solid #eee', 
+                  borderRadius: '5px', 
+                  marginBottom: '5px',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center'
+                }}>
+                  <div>
+                    <strong>{userItem.email}</strong>
+                    <br />
+                    <small style={{ color: userItem.isAdmin ? 'red' : 'blue' }}>
+                      {userItem.isAdmin ? '관리자' : '일반 사용자'}
+                    </small>
+                  </div>
+                  <Button 
+                    btnType={userItem.isAdmin ? "delete" : "submit"}
+                    onClick={() => toggleUserAdminStatus(userItem.id, userItem.isAdmin)}
+                    style={{ fontSize: '12px', padding: '5px 10px' }}
+                  >
+                    {userItem.isAdmin ? '권한 해제' : '관리자 임명'}
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <Button btnType="default" onClick={() => setShowAdminPanel(false)}>
+            패널 닫기
+          </Button>
+        </AdminPanel>
+      )}
+
       <TabContainer>
         <TabButton
           active={activeTab === 'qa'}
@@ -460,7 +769,12 @@ export default function QA() {
       {showPasswordModal && (
         <PasswordModal>
           <h3>비밀번호 확인</h3>
-          <p>글 {passwordAction.type === 'delete' ? '삭제' : '수정'}를 위해 비밀번호를 입력하세요.</p>
+          <p>글 {passwordAction.type === 'delete' ? '삭제' : passwordAction.type === 'edit' ? '수정' : '열람'}을 위해 비밀번호를 입력하세요.</p>
+          {isAdmin && (
+            <p style={{ color: '#28a745', fontSize: '14px' }}>
+              ✅ 관리자는 비밀번호 없이도 진행 가능합니다.
+            </p>
+          )}
           <input
             type="password"
             placeholder="비밀번호"
@@ -474,12 +788,6 @@ export default function QA() {
           </div>
         </PasswordModal>
       )}
-
-      <div style={{ position: 'fixed', bottom: '20px', right: '20px' }}>
-        <button onClick={() => setIsAdmin(prev => !prev)} style={{ padding: '10px', backgroundColor: isAdmin ? 'red' : 'green', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>
-          {isAdmin ? '관리자 모드 해제' : '관리자 모드 활성화'}
-        </button>
-      </div>
     </CommunityContainer>
   );
 }
