@@ -253,7 +253,7 @@ export default function QA() {
   };
 
   // 사용자 목록 불러오기 (관리자용)
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     if (!isAdmin) return;
     
     try {
@@ -266,13 +266,13 @@ export default function QA() {
     } catch (error) {
       console.error("Error fetching users:", error);
     }
-  };
+  }, [isAdmin]);
 
   useEffect(() => {
     if (isAdmin) {
       fetchUsers();
     }
-  }, [isAdmin]);
+  }, [isAdmin, fetchUsers]);
 
   // 관리자 권한 부여/제거
   const toggleUserAdminStatus = async (userId, currentStatus) => {
