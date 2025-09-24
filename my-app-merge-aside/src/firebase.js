@@ -7,12 +7,12 @@ import { getAuth } from "firebase/auth";
 
 // 여러분의 Firebase 프로젝트 설정 정보입니다.
 const firebaseConfig = {
-  apiKey: "AIzaSyBrRxaKFrT96sbO8NVt_Jp5RbaoYz2RK9Y",
-  authDomain: "lectures-84eaa.firebaseapp.com",
-  projectId: "lectures-84eaa",
-  storageBucket: "lectures-84eaa.firebasestorage.app",
-  messagingSenderId: "1037373196085",
-  appId: "1:1037373196085:web:8b53a6ce80287d4eadee7c",
+  apiKey: process.env.REACT_APP_FIREBASE_API_KEY || "AIzaSyBrRxaKFrT96sbO8NVt_Jp5RbaoYz2RK9Y",
+  authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN || "lectures-84eaa.firebaseapp.com",
+  projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID || "lectures-84eaa",
+  storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET || "lectures-84eaa.firebasestorage.app",
+  messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID || "1037373196085",
+  appId: process.env.REACT_APP_FIREBASE_APP_ID || "1:1037373196085:web:8b53a6ce80287d4eadee7c",
 };
 
 // Firebase 앱을 초기화합니다.
