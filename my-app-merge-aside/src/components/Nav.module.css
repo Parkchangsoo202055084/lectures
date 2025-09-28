@@ -1,3 +1,4 @@
+/* Nav.module.css */
 .header {
   width: 100%;
   background-color: #410f67;
@@ -18,18 +19,32 @@
   align-items: center;
 }
 
-.search-box {
+/* 검색 컨테이너를 상대 위치로 설정하여 드롭다운 위치 기준점 생성 */
+.search-container {
+  position: relative;
   display: flex;
+  flex-direction: column;
   flex-grow: 1;
   margin: 0 30px;
   max-width: 600px;
 }
 
+.search-box {
+  display: flex;
+  width: 100%;
+}
+
 .search-box input {
   flex-grow: 1;
-  padding: 8px;
+  padding: 8px 12px;
   border: none;
   border-radius: 4px 0 0 4px;
+  font-size: 14px;
+  outline: none;
+}
+
+.search-box input:focus {
+  box-shadow: 0 0 0 2px #4285f4;
 }
 
 .search-icon {
@@ -39,6 +54,136 @@
   color: white;
   border-radius: 0 4px 4px 0;
   cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.search-icon:hover {
+  background-color: #1a4a7a;
+}
+
+/* 검색 제안 드롭다운 스타일 */
+.suggestions-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 0 0 8px 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  max-height: 400px;
+  overflow-y: auto;
+  margin-top: 2px;
+  color: #333; /* 기본 텍스트 색상을 어둡게 설정 */
+}
+
+.suggestion-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  cursor: pointer;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background-color 0.2s;
+}
+
+.suggestion-item:last-child {
+  border-bottom: none;
+}
+
+.suggestion-item:hover,
+.suggestion-selected {
+  background-color: #f5f5f5;
+}
+
+.suggestion-icon {
+  margin-right: 12px;
+  font-size: 16px;
+}
+
+.suggestion-text {
+  flex-grow: 1;
+  color: #333;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.suggestion-type {
+  color: #666;
+  font-size: 12px;
+  padding: 2px 8px;
+  background-color: #e9ecef;
+  border-radius: 12px;
+  margin-left: 8px;
+}
+
+/* 섹션 구분선 */
+.divider {
+  height: 1px;
+  background-color: #e9ecef;
+  margin: 4px 0;
+}
+
+/* 섹션 헤더 */
+.section-header {
+  padding: 8px 16px;
+  font-size: 12px;
+  font-weight: bold;
+  color: #666;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #e9ecef;
+}
+
+/* 인기 검색어 아이템 */
+.popular-item {
+  display: flex;
+  align-items: center;
+  padding: 10px 16px;
+  cursor: pointer;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background-color 0.2s;
+  background-color: white; /* 배경을 명시적으로 흰색 설정 */
+}
+
+.popular-item:last-child {
+  border-bottom: none;
+}
+
+.popular-item:hover,
+.popular-item.suggestion-selected {
+  background-color: #f5f5f5;
+}
+
+.popular-rank {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  background-color: #ff6b35;
+  color: white;
+  font-size: 11px;
+  font-weight: bold;
+  border-radius: 50%;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+.popular-text {
+  flex-grow: 1;
+  color: #333; /* 텍스트 색상을 어둡게 설정 */
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* 로딩 및 빈 결과 상태 */
+.loading-item,
+.no-results {
+  padding: 16px;
+  text-align: center;
+  color: #666;
+  font-size: 14px;
+  background-color: white; /* 배경을 명시적으로 흰색 설정 */
 }
 
 /* 기존 디자인을 유지하면서 로그인/언어 버튼을 함께 묶는 컨테이너 */
@@ -55,6 +200,11 @@
   padding: 8px 12px;
   border-radius: 15px;
   cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.lang-btn:hover {
+  background-color: #3a1a5c;
 }
 
 /* 로그인 버튼 */
@@ -67,6 +217,7 @@
   cursor: pointer;
   font-size: 14px;
   min-width: 70px;
+  transition: background-color 0.2s;
 }
 
 .auth-btn:hover {
@@ -119,6 +270,7 @@
   color: #2b2b2b;
   font-weight: bold;
   cursor: pointer;
+  transition: all 0.2s;
 }
 
 .nav-bar button:hover,
@@ -129,11 +281,37 @@
   border-radius: 6px;
 }
 
-/* Nav.module.css */
+/* 이메일/비밀번호 입력 필드 (필요시) */
 .auth-input {
   margin-right: 10px;
   padding: 8px;
   border: 1px solid #ccc;
   border-radius: 4px;
   width: 150px;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .top-bar {
+    flex-direction: column;
+    gap: 10px;
+    align-items: stretch;
+  }
+  
+  .search-container {
+    margin: 0;
+    max-width: none;
+  }
+  
+  .auth-lang-container {
+    justify-content: center;
+  }
+  
+  .suggestions-dropdown {
+    font-size: 14px;
+  }
+  
+  .suggestion-item {
+    padding: 10px 12px;
+  }
 }
