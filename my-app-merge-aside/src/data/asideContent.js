@@ -67,15 +67,7 @@ export const ASIDE_CONTENT = {
         },
       ],
     },
-    newB: {
-      title: "재학생 정보",
-      collapsible: [
-        {
-          title: "재학생 정보",
-          items: ["학사일정", "OT 안내"],
-        },
-      ],
-    },
+    newB: { title: "재학생 정보", items: ["학사일정", "OT 안내"]},
     club: { title: "동아리", items: ["중앙동아리", "가입방법"] },
     assist: {
       title: "학생지원",
