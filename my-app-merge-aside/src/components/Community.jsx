@@ -637,10 +637,20 @@ export default function QA() {
   
   return (
     <CommunityContainer>
+      {/* ⭐️ 사용자 상태 정보를 CommunityContainer 내부 우측 상단에 표시 */}
       {user && (
-        <UserStatusDisplay isAdmin={isAdmin}>
-          {isAdmin ? '👑 관리자' : '👤 사용자'}: {user.email}
-        </UserStatusDisplay>
+          <div style={{ textAlign: 'right', marginBottom: '15px' }}>
+              <span style={{ 
+                  fontWeight: 'bold', 
+                  color: isAdmin ? '#dc3545' : '#007bff', 
+                  fontSize: '14px',
+                  padding: '5px 10px',
+                  borderRadius: '5px',
+                  backgroundColor: '#f8f9fa'
+              }}>
+                  {isAdmin ? '👑 관리자' : '👤 사용자'}: {user.email}
+              </span>
+          </div>
       )}
 
       {isAdmin && (
