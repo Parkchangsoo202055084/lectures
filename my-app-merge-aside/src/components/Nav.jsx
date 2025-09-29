@@ -16,8 +16,11 @@ export const Nav = ({ activeTab, setActiveTab, onSearch, texts, onToggleLang }) 
   const searchInputRef = useRef(null);
   const suggestionsRef = useRef(null);
   const { user, loading, loginWithGoogle, loginWithEmail, logout } = useAuth();
+  
+  // 팝업 로그인용 상태
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showLoginModal, setShowLoginModal] = useState(false); // 👈 로그인 팝업 상태 추가
 
   // 검색 인덱스 생성 (메모이제이션)
   const searchIndex = useMemo(() => makeSearchIndex(), []);
@@ -235,16 +238,20 @@ export const Nav = ({ activeTab, setActiveTab, onSearch, texts, onToggleLang }) 
       await loginWithEmail(email, password);
       setEmail("");
       setPassword("");
+      setShowLoginModal(false); // 👈 로그인 성공 시 모달 닫기
     } catch (error) {
       console.error("Login failed:", error);
+      alert("로그인 실패: " + error.message); 
     }
   };
 
   const handleGoogleLoginClick = async () => {
     try {
       await loginWithGoogle();
+      setShowLoginModal(false); // 👈 로그인 성공 시 모달 닫기
     } catch (error) {
       console.error("Google login failed:", error);
+      alert("구글 로그인 실패: " + error.message);
     }
   };
 
@@ -255,6 +262,7 @@ export const Nav = ({ activeTab, setActiveTab, onSearch, texts, onToggleLang }) 
   // 외부 클릭시 드롭다운 닫기
   useEffect(() => {
     const handleClickOutside = (event) => {
+      // 검색 제안 드롭다운 닫기 로직
       if (
         suggestionsRef.current && 
         !suggestionsRef.current.contains(event.target) &&
@@ -263,14 +271,80 @@ export const Nav = ({ activeTab, setActiveTab, onSearch, texts, onToggleLang }) 
         setShowSuggestions(false);
         setSelectedSuggestionIndex(-1);
       }
+      
+      // 모달 외부 클릭시 닫기 로직 (모달이 열려 있을 때만)
+      if (showLoginModal) {
+          const modal = document.querySelector(`.${styles["login-modal"]}`);
+          const backdrop = document.querySelector(`.${styles["modal-backdrop"]}`);
+          if (
+              backdrop && backdrop.contains(event.target) && 
+              (!modal || !modal.contains(event.target))
+          ) {
+              setShowLoginModal(false);
+          }
+      }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  }, [showLoginModal]); // showLoginModal 상태를 의존성 배열에 추가
 
   return (
     <header className={styles.header}>
+      {/* 👈 로그인 모달 팝업 렌더링 */}
+      {showLoginModal && (
+        <div className={styles["modal-backdrop"]} onClick={() => setShowLoginModal(false)}>
+          <div 
+            className={styles["login-modal"]} 
+            onClick={(e) => e.stopPropagation()} // 모달 내부 클릭 시 닫히지 않도록
+          >
+            <button 
+              className={styles["close-button"]} 
+              onClick={() => setShowLoginModal(false)}
+            >
+              &times;
+            </button>
+            <h2 className={styles["modal-title"]}>{texts.auth.login || "로그인"}</h2>
+            
+            <div className={styles["login-form"]}>
+              <input
+                type="email"
+                placeholder="이메일"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className={styles["auth-input-modal"]}
+              />
+              <input
+                type="password"
+                placeholder="비밀번호"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className={styles["auth-input-modal"]}
+              />
+              <button
+                className={styles["auth-btn-modal"]}
+                onClick={handleEmailLoginClick}
+                disabled={loading}
+              >
+                {loading ? "..." : texts.auth.emailLogin || "이메일로 로그인"}
+              </button>
+            </div>
+
+            <div className={styles["divider-modal"]}>또는</div>
+
+            <button
+              className={`${styles["auth-btn-modal"]} ${styles["google-btn"]}`}
+              onClick={handleGoogleLoginClick}
+              disabled={loading}
+            >
+              {loading ? "..." : "🔑 구글 계정으로 로그인"}
+            </button>
+            
+          </div>
+        </div>
+      )}
+      {/* 👆 로그인 모달 팝업 끝 */}
+      
       <div className={styles["top-bar"]}>
         <div className={styles["logo"]} onClick={goToHome} style={{ cursor: "pointer" }}>
           <img src={logo} alt={texts.nav.logoAlt} width="80" height="60" />
@@ -357,9 +431,15 @@ export const Nav = ({ activeTab, setActiveTab, onSearch, texts, onToggleLang }) 
               )}
               
               {/* 검색 결과 없음 */}
-              {!isLoadingPopular && suggestions.length === 0 && popularTerms.length === 0 && (
+              {!isLoadingPopular && suggestions.length === 0 && popularTerms.length === 0 && query.trim() && (
                 <div className={styles["no-results"]}>
                   검색 결과가 없습니다
+                </div>
+              )}
+               {/* 빈 검색창 상태 */}
+               {!isLoadingPopular && suggestions.length === 0 && popularTerms.length === 0 && !query.trim() && (
+                <div className={styles["no-results"]}>
+                  인기 검색어 로드 실패 또는 검색 기록 없음
                 </div>
               )}
             </div>
@@ -391,37 +471,14 @@ export const Nav = ({ activeTab, setActiveTab, onSearch, texts, onToggleLang }) 
               </button>
             </>
           ) : (
-            // 로그아웃 상태일 때
-            <>
-              <input
-                type="email"
-                placeholder="이메일"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className={styles["auth-input"]}
-              />
-              <input
-                type="password"
-                placeholder="비밀번호"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className={styles["auth-input"]}
-              />
-              <button
-                className={styles["auth-btn"]}
-                onClick={handleEmailLoginClick}
-                disabled={loading}
-              >
-                {loading ? "..." : "이메일 로그인"}
-              </button>
-              <button
-                className={styles["auth-btn"]}
-                onClick={handleGoogleLoginClick}
-                disabled={loading}
-              >
-                {loading ? "..." : "구글 로그인"}
-              </button>
-            </>
+            // 로그아웃 상태일 때: "로그인" 버튼 하나만 표시
+            <button
+              className={styles["auth-btn"]}
+              onClick={() => setShowLoginModal(true)} // 👈 클릭 시 모달 열기
+              disabled={loading}
+            >
+              {loading ? "..." : texts.auth.login || "로그인"}
+            </button>
           )}
           <button className={styles["lang-btn"]} onClick={onToggleLang}>
             {texts.nav.langButton}

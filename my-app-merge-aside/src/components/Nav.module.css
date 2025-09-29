@@ -191,6 +191,8 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  /* 👈 [추가]: 우측 정렬 */
+  justify-content: flex-end; 
 }
 
 .lang-btn {
@@ -236,6 +238,8 @@
   gap: 8px;
   color: white;
   font-size: 14px;
+  /* 👈 [추가]: 마우스 오버 시 툴팁을 암시 */
+  cursor: help; 
 }
 
 .profile-img {
@@ -245,10 +249,13 @@
 }
 
 .user-name {
-  max-width: 100px;
+  /* 👈 [수정]: max-width를 100px에서 180px로 증가 */
+  max-width: 180px; 
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  /* 👈 [추가]: 긴 문자열이 있을 때 글자가 잘릴 때 처리 (이름이 길어도 잘림 방지) */
+  word-break: break-all;
 }
 
 .nav-bar {
@@ -281,8 +288,9 @@
   border-radius: 6px;
 }
 
-/* 이메일/비밀번호 입력 필드 (필요시) */
+/* 이메일/비밀번호 입력 필드 (기존 필드는 이제 모달 내부에서 사용됨) */
 .auth-input {
+  /* 상단 바에서는 사용되지 않지만, 다른 곳에서 사용될 경우를 위해 유지 */
   margin-right: 10px;
   padding: 8px;
   border: 1px solid #ccc;
@@ -304,7 +312,8 @@
   }
   
   .auth-lang-container {
-    justify-content: center;
+    /* 👈 [수정]: 모바일에서는 중앙 정렬 유지 */
+    justify-content: center; 
   }
   
   .suggestions-dropdown {
@@ -314,4 +323,160 @@
   .suggestion-item {
     padding: 10px 12px;
   }
+
+  /* 모바일에서 모달이 너무 크지 않도록 조정 */
+  .login-modal {
+    max-width: 90%;
+  }
+}
+
+/*
+ * ====================================================================
+ * 로그인 모달 (팝업) 관련 스타일
+ * ====================================================================
+ */
+
+/* 모달 배경: 전체 화면을 덮고, 중앙에 모달을 배치 */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.6); /* 반투명 검은색 배경 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000; 
+}
+
+/* 로그인 모달 자체 스타일 */
+.login-modal {
+  background-color: white;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  width: 90%;
+  max-width: 350px; /* 약간 더 작게 조정 */
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  animation: fadeIn 0.3s ease-out; /* 모달 등장 애니메이션 */
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* 닫기 버튼 */
+.close-button {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: none;
+  border: none;
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+  color: #666;
+  transition: color 0.2s;
+}
+
+.close-button:hover {
+  color: #333;
+}
+
+/* 모달 제목 */
+.modal-title {
+  text-align: center;
+  margin-bottom: 15px;
+  font-size: 1.5em;
+  color: #333;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+}
+
+/* 로그인 폼 컨테이너 */
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+/* 모달 내부 입력 필드 */
+.auth-input-modal {
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  width: 100%;
+  box-sizing: border-box; 
+  font-size: 14px;
+}
+
+.auth-input-modal:focus {
+  outline: 2px solid #4285f4;
+  border-color: transparent;
+}
+
+/* 모달 내부 버튼 (이메일 로그인) */
+.auth-btn-modal {
+  padding: 12px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.2s, opacity 0.2s;
+  background-color: #410f67; /* 네비게이션바의 주요 색상 사용 */
+  color: white;
+  width: 100%;
+  font-size: 14px;
+}
+
+.auth-btn-modal:hover:not(:disabled) {
+  background-color: #291355;
+}
+
+/* 구분선 (예: '또는') */
+.divider-modal {
+  text-align: center;
+  margin: 15px 0;
+  font-size: 0.9em;
+  color: #aaa;
+  position: relative;
+  line-height: 1;
+}
+
+.divider-modal::before,
+.divider-modal::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 40%;
+  height: 1px;
+  background: #eee;
+  transform: translateY(-50%);
+}
+
+.divider-modal::before {
+  left: 0;
+}
+
+.divider-modal::after {
+  right: 0;
+}
+
+/* 구글 로그인 버튼 */
+.google-btn {
+  background-color: #db4437; /* Google Red */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.google-btn:hover:not(:disabled) {
+  background-color: #c03328;
 }
