@@ -4,7 +4,7 @@ import styles from "./Nav.module.css";
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { makeSearchIndex, norm } from "../utils/searchIndex";
-import { saveSearchTerm, getPopularSearchTerms } from "../utils/searchAnalytics";
+import { saveSuccessfulSearch, saveAllSearchAttempts, getPopularSearchTerms } from "../utils/searchAnalytics";
 
 export const Nav = ({ activeTab, setActiveTab, onSearch, texts, onToggleLang }) => {
   const [query, setQuery] = useState("");
@@ -92,16 +92,31 @@ export const Nav = ({ activeTab, setActiveTab, onSearch, texts, onToggleLang }) 
     
     const trimmedQuery = searchQuery.trim();
     
+    // 검색 인덱스에서 완전 일치만 성공으로 판별
+    const normalizedQuery = norm(trimmedQuery);
+    const exactMatch = searchIndex.buildingIndex.get(normalizedQuery) || 
+                      searchIndex.facilityIndex.get(normalizedQuery);
+    
+    const isSuccessful = exactMatch !== undefined;
+    
+    console.log(`검색어: "${trimmedQuery}", 정규화: "${normalizedQuery}", 성공 여부: ${isSuccessful}`);
+    
     // 파이어베이스에 검색어 저장
     try {
-      await saveSearchTerm(trimmedQuery);
-      // 인기 검색어 목록 새로고침 (필요시)
-      loadPopularSearchTerms();
+      // 모든 검색 시도 저장 (오타 분석용)
+      await saveAllSearchAttempts(trimmedQuery, isSuccessful);
+      
+      // 성공한 검색어만 별도 저장 (인기 검색어용)
+      if (isSuccessful) {
+        await saveSuccessfulSearch(trimmedQuery);
+        // 성공한 검색어일 때만 인기 검색어 목록 새로고침
+        loadPopularSearchTerms();
+      }
     } catch (error) {
       console.error('검색어 저장 실패:', error);
     }
     
-    // 기존 검색 기능 실행
+    // 기존 검색 기능 실행 (여전히 유사성 검색 사용)
     onSearch && onSearch(trimmedQuery);
     setShowSuggestions(false);
     setSelectedSuggestionIndex(-1);
@@ -314,7 +329,6 @@ export const Nav = ({ activeTab, setActiveTab, onSearch, texts, onToggleLang }) 
                       >
                         <span className={styles["popular-rank"]}>{index + 1}</span>
                         <span className={styles["popular-text"]}>{term.term}</span>
-                        <span className={styles["popular-count"]}>{term.count}</span>
                       </div>
                     );
                   })}
