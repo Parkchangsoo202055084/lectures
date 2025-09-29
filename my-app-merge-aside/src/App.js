@@ -24,13 +24,13 @@ const Container = styled.div`
   display: flex;
 `;
 
-// ✅ 기존: 탭 전환 시 map 섹션만 표시
+// 기존: 탭 전환 시 map 섹션만 표시
 const MapSection = styled.div`
   width: 100%;
   display: ${(props) => (props.active ? "block" : "none")};
 `;
 
-// ✅ 추가: 지도와 패널을 옆으로 배치
+// 추가: 지도와 패널을 옆으로 배치
 const MapLayout = styled.div`
   display: flex;
   gap: 16px;
@@ -92,11 +92,23 @@ function App() {
   const searchIndexData = useMemo(() => makeSearchIndex(), []);
 
   const runSearch = (query) => {
+    console.log('🔍 검색 시작:', query);
+    
     const hit = searchIndexData.search(query);
+    console.log('📊 검색 결과:', hit);
+    
     if (!hit) {
+      console.log('❌ 검색 결과 없음');
       console.log(texts[lang].nav.searchNoResult);
       return;
     }
+    
+    console.log('✅ 검색 성공!');
+    console.log('📍 결과 타입:', hit.type);
+    console.log('📍 카테고리:', hit.category);
+    console.log('📍 아이템:', hit.item);
+    console.log('📍 이름:', hit.name);
+    
     setActiveTab("map");
 
     // 지도 준비 대기
@@ -112,9 +124,18 @@ function App() {
       });
 
     waitUntil(() => ready && !!mapRef.current).then(() => {
-      if (hit.type === "building") handleSelectBuilding(hit.name);
-      else if (hit.type === "facility")
+      console.log('🗺️ 지도 준비 완료, 핸들러 호출 중...');
+      console.log('🗺️ ready 상태:', ready);
+      console.log('🗺️ mapRef.current 존재:', !!mapRef.current);
+      
+      if (hit.type === "building") {
+        console.log('🏢 건물 핸들러 호출:', hit.name);
+        handleSelectBuilding(hit.name);
+      } else if (hit.type === "facility") {
+        console.log('🏪 편의시설 핸들러 호출:', hit.category, hit.item);
+        console.log('🏪 handleSelectFacility 함수:', typeof handleSelectFacility);
         handleSelectFacility(hit.category, hit.item);
+      }
     });
 
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -147,7 +168,7 @@ function App() {
         />
 
         <div style={{ padding: "20px", flexGrow: 1 }}>
-          {/* ✅ 변경: 지도/상세 패널을 가로 배치 */}
+          {/* 변경: 지도/상세 패널을 가로 배치 */}
           <MapSection active={activeTab === "map"}>
             <MapLayout>
               <MapBox>

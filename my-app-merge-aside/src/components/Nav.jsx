@@ -92,14 +92,14 @@ export const Nav = ({ activeTab, setActiveTab, onSearch, texts, onToggleLang }) 
     
     const trimmedQuery = searchQuery.trim();
     
-    // 검색 인덱스에서 완전 일치만 성공으로 판별
-    const normalizedQuery = norm(trimmedQuery);
-    const exactMatch = searchIndex.buildingIndex.get(normalizedQuery) || 
-                      searchIndex.facilityIndex.get(normalizedQuery);
+    // 검색 인덱스에서 실제 검색 결과 확인 (유사성 검색 포함)
+    const searchResult = searchIndex.search(trimmedQuery);
+    const isSuccessful = searchResult !== null;
     
-    const isSuccessful = exactMatch !== undefined;
-    
-    console.log(`검색어: "${trimmedQuery}", 정규화: "${normalizedQuery}", 성공 여부: ${isSuccessful}`);
+    console.log(`검색어: "${trimmedQuery}", 성공 여부: ${isSuccessful}`);
+    if (searchResult) {
+      console.log('검색 결과:', searchResult);
+    }
     
     // 파이어베이스에 검색어 저장
     try {
@@ -116,7 +116,7 @@ export const Nav = ({ activeTab, setActiveTab, onSearch, texts, onToggleLang }) 
       console.error('검색어 저장 실패:', error);
     }
     
-    // 기존 검색 기능 실행 (여전히 유사성 검색 사용)
+    // 기존 검색 기능 실행
     onSearch && onSearch(trimmedQuery);
     setShowSuggestions(false);
     setSelectedSuggestionIndex(-1);
