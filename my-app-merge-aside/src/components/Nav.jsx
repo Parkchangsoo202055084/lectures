@@ -76,6 +76,20 @@ export const Nav = ({ activeTab, setActiveTab, onSearch, texts, onToggleLang }) 
       }
     }
 
+    // 네비게이션 항목 추가
+    for (const [key, value] of searchIndex.navigationIndex) {
+      if (suggestions.length >= maxSuggestions) break;
+      
+      if (key.includes(normalizedQuery) || normalizedQuery.includes(key)) {
+        suggestions.push({
+          text: value.title,
+          type: "navigation",
+          icon: value.tab === "bus" ? "🚌" : value.tab === "assist" ? "ℹ️" : value.tab === "newB" ? "📅" : "🎭",
+          source: "index"
+        });
+      }
+    }
+
     return suggestions;
   };
 

@@ -135,6 +135,10 @@ function App() {
         console.log('🏪 편의시설 핸들러 호출:', hit.category, hit.item);
         console.log('🏪 handleSelectFacility 함수:', typeof handleSelectFacility);
         handleSelectFacility(hit.category, hit.item);
+      } else if (hit.type === "navigation") {
+        console.log('📋 네비게이션 항목으로 이동:', hit.tab, hit.item);
+        setActiveTab(hit.tab);
+        setSelectedItem(hit.item);
       }
     });
 

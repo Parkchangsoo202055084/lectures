@@ -35,6 +35,7 @@ const CATEGORY_MAPPING = {
 export function makeSearchIndex() {
   const buildingIndex = new Map();
   const facilityIndex = new Map();
+  const navigationIndex = new Map(); // 네비게이션 항목용 인덱스 추가
 
   const handleLangData = (lang) => {
     const asideMap = texts[lang].aside.map;
@@ -74,6 +75,77 @@ export function makeSearchIndex() {
         });
       }
     });
+
+    // 네비게이션 항목 추가 (버스 정보, 학사일정 등)
+    const busInfo = texts[lang].busInfo;
+    Object.keys(busInfo).forEach((key) => {
+      if (key !== 'notSelected' && key !== 'notReady' && key !== 'imageAlt' && busInfo[key].title) {
+        navigationIndex.set(norm(key), {
+          type: "navigation",
+          tab: "bus",
+          item: key,
+          title: busInfo[key].title
+        });
+        
+        // 제목으로도 검색 가능하게
+        navigationIndex.set(norm(busInfo[key].title), {
+          type: "navigation", 
+          tab: "bus",
+          item: key,
+          title: busInfo[key].title
+        });
+      }
+    });
+
+    // 도움 정보 추가 (장학금, 상담센터 등)
+    const assistDetails = texts[lang].assistDetails;
+    Object.keys(assistDetails).forEach((key) => {
+      if (key !== 'notSelected' && key !== 'notReady' && assistDetails[key].title) {
+        navigationIndex.set(norm(key), {
+          type: "navigation",
+          tab: "assist", 
+          item: key,
+          title: assistDetails[key].title
+        });
+        
+        navigationIndex.set(norm(assistDetails[key].title), {
+          type: "navigation",
+          tab: "assist",
+          item: key, 
+          title: assistDetails[key].title
+        });
+      }
+    });
+
+    // 학사일정, OT 안내 추가
+    navigationIndex.set(norm("학사일정"), {
+      type: "navigation",
+      tab: "newB",
+      item: "학사일정",
+      title: "학사일정"
+    });
+
+    navigationIndex.set(norm("OT 안내"), {
+      type: "navigation", 
+      tab: "newB",
+      item: "OT 안내",
+      title: "OT 안내"
+    });
+
+    // 동아리 관련 추가
+    navigationIndex.set(norm("중앙동아리"), {
+      type: "navigation",
+      tab: "club",
+      item: texts[lang].aside.club.items[0],
+      title: "중앙동아리"
+    });
+
+    navigationIndex.set(norm("동아리 가입방법"), {
+      type: "navigation",
+      tab: "club", 
+      item: texts[lang].aside.club.items[1],
+      title: "동아리 가입방법"
+    });
   };
 
   // 한국어 먼저 처리하여 한국어 카테고리가 우선되도록
@@ -81,24 +153,26 @@ export function makeSearchIndex() {
   handleLangData("en");
 
   console.log('facilityIndex 내용:', Array.from(facilityIndex.entries()));
+  console.log('navigationIndex 내용:', Array.from(navigationIndex.entries()));
 
   // 반환 객체에 검색 메소드를 추가합니다.
   return {
     buildingIndex,
     facilityIndex,
-    search: (query) => searchIndex({ buildingIndex, facilityIndex }, query),
+    navigationIndex,
+    search: (query) => searchIndex({ buildingIndex, facilityIndex, navigationIndex }, query),
   };
 }
 
 // 검색 실행 (hit 반환)
-export function searchIndex({ buildingIndex, facilityIndex }, query) {
+export function searchIndex({ buildingIndex, facilityIndex, navigationIndex }, query) {
   const q = norm(query); // 편의시설용 정규화 (괄호 유지)
   const qBuilding = normBuilding(query); // 건물용 정규화 (괄호 제거)
   
   if (!q && !qBuilding) return null;
 
-  // 1. 완전 일치 검색
-  let hit = facilityIndex.get(q) || buildingIndex.get(qBuilding);
+  // 1. 완전 일치 검색 - 순서: 건물 -> 편의시설 -> 네비게이션
+  let hit = buildingIndex.get(qBuilding) || facilityIndex.get(q) || navigationIndex.get(q);
   if (hit) {
     console.log('완전 일치 검색 결과:', hit);
     return hit;
@@ -120,6 +194,15 @@ export function searchIndex({ buildingIndex, facilityIndex }, query) {
 
   // 편의시설 검색 (괄호 유지된 쿼리로)
   for (const [key, value] of facilityIndex) {
+    const distance = levenshteinDistance(q, key);
+    if (distance <= maxDistance && distance < minDistance) {
+      minDistance = distance;
+      bestHit = value;
+    }
+  }
+
+  // 네비게이션 검색 (괄호 유지된 쿼리로)
+  for (const [key, value] of navigationIndex) {
     const distance = levenshteinDistance(q, key);
     if (distance <= maxDistance && distance < minDistance) {
       minDistance = distance;
