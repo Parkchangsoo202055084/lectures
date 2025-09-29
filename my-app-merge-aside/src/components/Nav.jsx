@@ -5,6 +5,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { makeSearchIndex, norm } from "../utils/searchIndex";
 import { saveSuccessfulSearch, saveAllSearchAttempts, getPopularSearchTerms } from "../utils/searchAnalytics";
+import { translateToKorean, isEnglishQuery } from "../utils/englishKoreanTranslator";
 
 export const Nav = ({ activeTab, setActiveTab, onSearch, texts, onToggleLang }) => {
   const [query, setQuery] = useState("");
@@ -16,34 +17,33 @@ export const Nav = ({ activeTab, setActiveTab, onSearch, texts, onToggleLang }) 
   const searchInputRef = useRef(null);
   const suggestionsRef = useRef(null);
   const { user, loading, loginWithGoogle, loginWithEmail, logout } = useAuth();
-  
-  // 팝업 로그인용 상태
+
+  // 로그인 모달 상태
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [showLoginModal, setShowLoginModal] = useState(false); // 👈 로그인 팝업 상태 추가
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
-  // 검색 인덱스 생성 (메모이제이션)
+  // 검색 인덱스 생성
   const searchIndex = useMemo(() => makeSearchIndex(), []);
 
-  // 컴포넌트 마운트시 인기 검색어 로드
+  // 인기 검색어 로드
   useEffect(() => {
     loadPopularSearchTerms();
   }, []);
 
-  // 인기 검색어 로드
   const loadPopularSearchTerms = async () => {
     setIsLoadingPopular(true);
     try {
       const popular = await getPopularSearchTerms(8);
       setPopularTerms(popular);
     } catch (error) {
-      console.error('인기 검색어 로드 실패:', error);
+      console.error("인기 검색어 로드 실패:", error);
     } finally {
       setIsLoadingPopular(false);
     }
   };
 
-  // 연관 검색어 생성 함수
+  // 연관 검색어 생성
   const generateSuggestions = (inputQuery) => {
     if (!inputQuery.trim()) return [];
 
@@ -51,44 +51,29 @@ export const Nav = ({ activeTab, setActiveTab, onSearch, texts, onToggleLang }) 
     const suggestions = [];
     const maxSuggestions = 6;
 
-    // 건물 검색어 추가
     for (const [key, value] of searchIndex.buildingIndex) {
       if (suggestions.length >= maxSuggestions) break;
-      
       if (key.includes(normalizedQuery) || normalizedQuery.includes(key)) {
-        suggestions.push({
-          text: value.name,
-          type: "building",
-          icon: "🏢",
-          source: "index"
-        });
+        suggestions.push({ text: value.name, type: "building", icon: "🏢", source: "index" });
       }
     }
 
-    // 편의시설 검색어 추가
     for (const [key, value] of searchIndex.facilityIndex) {
       if (suggestions.length >= maxSuggestions) break;
-      
       if (key.includes(normalizedQuery) || normalizedQuery.includes(key)) {
-        suggestions.push({
-          text: value.item,
-          type: "facility",
-          icon: "🏪",
-          source: "index"
-        });
+        suggestions.push({ text: value.item, type: "facility", icon: "🏪", source: "index" });
       }
     }
 
-    // 네비게이션 항목 추가
     for (const [key, value] of searchIndex.navigationIndex) {
       if (suggestions.length >= maxSuggestions) break;
-      
       if (key.includes(normalizedQuery) || normalizedQuery.includes(key)) {
         suggestions.push({
-          text: value.title,
+          text: value.title || value.item,
           type: "navigation",
           icon: value.tab === "bus" ? "🚌" : value.tab === "assist" ? "ℹ️" : value.tab === "newB" ? "📅" : "🎭",
-          source: "index"
+          source: "index",
+          category: value.tab
         });
       }
     }
@@ -104,45 +89,93 @@ export const Nav = ({ activeTab, setActiveTab, onSearch, texts, onToggleLang }) 
     { id: "assist", label: texts.aside.assist.title },
   ];
 
+  // 검색 실행 (개선)
   const submit = async (searchQuery = query) => {
-    if (!searchQuery.trim()) return;
-    
-    const trimmedQuery = searchQuery.trim();
-    
-    // 검색 인덱스에서 실제 검색 결과 확인 (유사성 검색 포함)
-    const searchResult = searchIndex.search(trimmedQuery);
-    const isSuccessful = searchResult !== null;
-    
-    console.log(`검색어: "${trimmedQuery}", 성공 여부: ${isSuccessful}`);
-    if (searchResult) {
-      console.log('검색 결과:', searchResult);
+    if (!searchQuery || !searchQuery.trim()) return;
+    const originalQuery = searchQuery.trim();
+    let searchQueryForIndex = originalQuery;
+    let translatedQuery = null;
+
+    // 1) 영어 여부 판단 후 번역(시도)
+    if (isEnglishQuery(originalQuery)) {
+      try {
+        translatedQuery = await translateToKorean(originalQuery);
+        if (translatedQuery && translatedQuery.trim()) {
+          searchQueryForIndex = translatedQuery.trim();
+        }
+        console.log(`번역 시도: "${originalQuery}" -> "${translatedQuery}"`);
+      } catch (err) {
+        console.error("번역 실패:", err);
+      }
     }
-    
-    // 파이어베이스에 검색어 저장
+
+    // 2) 검색 인덱스에서 여러 후보로 시도 (번역된 것 먼저, 원본도 시도)
+    let searchResult = null;
     try {
-      // 모든 검색 시도 저장 (오타 분석용)
-      await saveAllSearchAttempts(trimmedQuery, isSuccessful);
-      
-      // 성공한 검색어만 별도 저장 (인기 검색어용)
+      // 첫 시도: 번역된(또는 원본) 문자열로 검색
+      searchResult = searchIndex.search(searchQueryForIndex);
+      console.log(`인덱스 검색 시도 1: "${searchQueryForIndex}" ->`, !!searchResult);
+
+      // 두 번째 시도: 번역이 있었고 아직 결과가 없으면 원본으로도 검색
+      if (!searchResult && translatedQuery && originalQuery !== searchQueryForIndex) {
+        searchResult = searchIndex.search(originalQuery);
+        console.log(`인덱스 검색 시도 2 (원본): "${originalQuery}" ->`, !!searchResult);
+      }
+
+      // 세 번째 시도(안정성 보완): norm(original) / norm(translated) 시도 (인덱스 impl에 따라 유효)
+      if (!searchResult) {
+        try {
+          const normOrig = norm(originalQuery);
+          const normTrans = translatedQuery ? norm(translatedQuery) : null;
+          if (normTrans && normTrans !== searchQueryForIndex) {
+            searchResult = searchIndex.search(normTrans);
+            console.log(`인덱스 검색 시도 3 (normTrans): "${normTrans}" ->`, !!searchResult);
+          }
+          if (!searchResult) {
+            searchResult = searchIndex.search(normOrig);
+            console.log(`인덱스 검색 시도 4 (normOrig): "${normOrig}" ->`, !!searchResult);
+          }
+        } catch (e) {
+          // norm() 사용이 불필요하거나 실패하면 무시
+        }
+      }
+    } catch (err) {
+      console.error("검색 인덱스 조회 중 오류:", err);
+    }
+
+    const isSuccessful = !!searchResult;
+    console.log(`최종 검색어(인덱스용): "${searchQueryForIndex}", 성공: ${isSuccessful}`, searchResult || null);
+
+    // 3) analytics 저장 (원본 쿼리로 저장)
+    try {
+      await saveAllSearchAttempts(originalQuery, isSuccessful);
       if (isSuccessful) {
-        await saveSuccessfulSearch(trimmedQuery);
-        // 성공한 검색어일 때만 인기 검색어 목록 새로고침
+        await saveSuccessfulSearch(originalQuery);
         loadPopularSearchTerms();
       }
     } catch (error) {
-      console.error('검색어 저장 실패:', error);
+      console.error("검색어 저장 실패:", error);
     }
-    
-    // 기존 검색 기능 실행
-    onSearch && onSearch(trimmedQuery);
+
+    // 4) 기존 onSearch 호출 (하위 호환 유지: 첫 인자 = 문자열, 두 번째 인자 = searchResult)
+    try {
+      if (typeof onSearch === "function") {
+        // 기존 핸들러가 문자열만 기대하는 경우에도 문제없도록 첫 인자는 문자열 전달
+        onSearch(searchQueryForIndex, searchResult);
+      }
+    } catch (err) {
+      console.error("onSearch 실행 중 오류:", err);
+    }
+
     setShowSuggestions(false);
     setSelectedSuggestionIndex(-1);
   };
 
+  // 입력 핸들러
   const handleInputChange = (e) => {
     const value = e.target.value;
     setQuery(value);
-    
+
     if (value.trim()) {
       const newSuggestions = generateSuggestions(value);
       setSuggestions(newSuggestions);
@@ -160,20 +193,14 @@ export const Nav = ({ activeTab, setActiveTab, onSearch, texts, onToggleLang }) 
       setSuggestions(newSuggestions);
       setShowSuggestions(true);
     } else {
-      // 검색창이 비어있을 때 인기 검색어 표시
       setShowSuggestions(true);
       setSuggestions([]);
     }
   };
 
   const handleSuggestionClick = (suggestion) => {
-    if (suggestion.source === 'popular') {
-      setQuery(suggestion.text);
-      submit(suggestion.text);
-    } else {
-      setQuery(suggestion.text);
-      submit(suggestion.text);
-    }
+    setQuery(suggestion.text);
+    submit(suggestion.text);
   };
 
   const handlePopularTermClick = (term) => {
@@ -183,7 +210,7 @@ export const Nav = ({ activeTab, setActiveTab, onSearch, texts, onToggleLang }) 
 
   const onKeyDown = (e) => {
     const allItems = [...suggestions, ...popularTerms];
-    
+
     if (e.key === "Enter") {
       if (selectedSuggestionIndex >= 0 && selectedSuggestionIndex < allItems.length) {
         if (selectedSuggestionIndex < suggestions.length) {
@@ -196,12 +223,10 @@ export const Nav = ({ activeTab, setActiveTab, onSearch, texts, onToggleLang }) 
       }
     } else if (e.key === "ArrowDown") {
       e.preventDefault();
-      setSelectedSuggestionIndex(prev => 
-        prev < allItems.length - 1 ? prev + 1 : prev
-      );
+      setSelectedSuggestionIndex((prev) => (prev < allItems.length - 1 ? prev + 1 : prev));
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
-      setSelectedSuggestionIndex(prev => prev > -1 ? prev - 1 : prev);
+      setSelectedSuggestionIndex((prev) => (prev > -1 ? prev - 1 : prev));
     } else if (e.key === "Escape") {
       setShowSuggestions(false);
       setSelectedSuggestionIndex(-1);
@@ -209,49 +234,42 @@ export const Nav = ({ activeTab, setActiveTab, onSearch, texts, onToggleLang }) 
     }
   };
 
-  const goToHome = () => {
-    setActiveTab("map");
-  };
+  const goToHome = () => setActiveTab("map");
 
-  const validateEmail = (email) => {
-    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return re.test(String(email).toLowerCase());
-  };
+  // 로그인 관련
+  const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email).toLowerCase());
 
   const handleEmailLoginClick = async () => {
     if (!email || !password) {
       alert("이메일과 비밀번호를 모두 입력해주세요.");
       return;
     }
-
     if (!validateEmail(email)) {
       alert("유효한 이메일 주소를 입력해주세요.");
       return;
     }
-
     if (password.length < 6) {
       alert("비밀번호는 6자리 이상이어야 합니다.");
       return;
     }
-
     try {
       await loginWithEmail(email, password);
       setEmail("");
       setPassword("");
-      setShowLoginModal(false); // 👈 로그인 성공 시 모달 닫기
+      setShowLoginModal(false);
     } catch (error) {
       console.error("Login failed:", error);
-      alert("로그인 실패: " + error.message); 
+      alert("로그인 실패: " + (error?.message || error));
     }
   };
 
   const handleGoogleLoginClick = async () => {
     try {
       await loginWithGoogle();
-      setShowLoginModal(false); // 👈 로그인 성공 시 모달 닫기
+      setShowLoginModal(false);
     } catch (error) {
       console.error("Google login failed:", error);
-      alert("구글 로그인 실패: " + error.message);
+      alert("구글 로그인 실패: " + (error?.message || error));
     }
   };
 
@@ -259,97 +277,61 @@ export const Nav = ({ activeTab, setActiveTab, onSearch, texts, onToggleLang }) 
     await logout();
   };
 
-  // 외부 클릭시 드롭다운 닫기
+  // 외부 클릭 시 드롭다운/모달 닫기
   useEffect(() => {
     const handleClickOutside = (event) => {
-      // 검색 제안 드롭다운 닫기 로직
-      if (
-        suggestionsRef.current && 
+      if (suggestionsRef.current &&
         !suggestionsRef.current.contains(event.target) &&
         !searchInputRef.current?.contains(event.target)
       ) {
         setShowSuggestions(false);
         setSelectedSuggestionIndex(-1);
       }
-      
-      // 모달 외부 클릭시 닫기 로직 (모달이 열려 있을 때만)
       if (showLoginModal) {
-          const modal = document.querySelector(`.${styles["login-modal"]}`);
-          const backdrop = document.querySelector(`.${styles["modal-backdrop"]}`);
-          if (
-              backdrop && backdrop.contains(event.target) && 
-              (!modal || !modal.contains(event.target))
-          ) {
-              setShowLoginModal(false);
-          }
+        const modal = document.querySelector(`.${styles["login-modal"]}`);
+        const backdrop = document.querySelector(`.${styles["modal-backdrop"]}`);
+        if (backdrop && backdrop.contains(event.target) && (!modal || !modal.contains(event.target))) {
+          setShowLoginModal(false);
+        }
       }
     };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [showLoginModal]); // showLoginModal 상태를 의존성 배열에 추가
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showLoginModal]);
 
   return (
     <header className={styles.header}>
-      {/* 👈 로그인 모달 팝업 렌더링 */}
+      {/* 로그인 모달 */}
       {showLoginModal && (
         <div className={styles["modal-backdrop"]} onClick={() => setShowLoginModal(false)}>
-          <div 
-            className={styles["login-modal"]} 
-            onClick={(e) => e.stopPropagation()} // 모달 내부 클릭 시 닫히지 않도록
-          >
-            <button 
-              className={styles["close-button"]} 
-              onClick={() => setShowLoginModal(false)}
-            >
+          <div className={styles["login-modal"]} onClick={(e) => e.stopPropagation()}>
+            <button className={styles["close-button"]} onClick={() => setShowLoginModal(false)}>
               &times;
             </button>
             <h2 className={styles["modal-title"]}>{texts.auth.login || "로그인"}</h2>
-            
+
             <div className={styles["login-form"]}>
-              <input
-                type="email"
-                placeholder="이메일"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className={styles["auth-input-modal"]}
-              />
-              <input
-                type="password"
-                placeholder="비밀번호"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className={styles["auth-input-modal"]}
-              />
-              <button
-                className={styles["auth-btn-modal"]}
-                onClick={handleEmailLoginClick}
-                disabled={loading}
-              >
+              <input type="email" placeholder="이메일" value={email} onChange={(e) => setEmail(e.target.value)} className={styles["auth-input-modal"]} />
+              <input type="password" placeholder="비밀번호" value={password} onChange={(e) => setPassword(e.target.value)} className={styles["auth-input-modal"]} />
+              <button className={styles["auth-btn-modal"]} onClick={handleEmailLoginClick} disabled={loading}>
                 {loading ? "..." : texts.auth.emailLogin || "이메일로 로그인"}
               </button>
             </div>
 
             <div className={styles["divider-modal"]}>또는</div>
 
-            <button
-              className={`${styles["auth-btn-modal"]} ${styles["google-btn"]}`}
-              onClick={handleGoogleLoginClick}
-              disabled={loading}
-            >
+            <button className={`${styles["auth-btn-modal"]} ${styles["google-btn"]}`} onClick={handleGoogleLoginClick} disabled={loading}>
               {loading ? "..." : "🔑 구글 계정으로 로그인"}
             </button>
-            
           </div>
         </div>
       )}
-      {/* 👆 로그인 모달 팝업 끝 */}
-      
+
       <div className={styles["top-bar"]}>
         <div className={styles["logo"]} onClick={goToHome} style={{ cursor: "pointer" }}>
           <img src={logo} alt={texts.nav.logoAlt} width="80" height="60" />
         </div>
-        
+
         <div className={styles["search-container"]}>
           <div className={styles["search-box"]}>
             <input
@@ -362,56 +344,49 @@ export const Nav = ({ activeTab, setActiveTab, onSearch, texts, onToggleLang }) 
               onKeyDown={onKeyDown}
               autoComplete="off"
             />
-            <button
-              className={styles["search-icon"]}
-              onClick={() => submit()}
-              aria-label={texts.nav.searchAriaLabel}
-            >
+            <button className={styles["search-icon"]} onClick={() => submit()} aria-label={texts.nav.searchAriaLabel}>
               🔍
             </button>
           </div>
-          
+
           {showSuggestions && (
             <div ref={suggestionsRef} className={styles["suggestions-dropdown"]}>
-              {/* 연관 검색어 섹션 */}
               {suggestions.length > 0 && (
                 <>
                   {suggestions.map((suggestion, index) => (
                     <div
                       key={`suggestion-${index}`}
-                      className={`${styles["suggestion-item"]} ${
-                        index === selectedSuggestionIndex ? styles["suggestion-selected"] : ""
-                      }`}
+                      className={`${styles["suggestion-item"]} ${index === selectedSuggestionIndex ? styles["suggestion-selected"] : ""}`}
                       onClick={() => handleSuggestionClick(suggestion)}
                       onMouseEnter={() => setSelectedSuggestionIndex(index)}
                     >
                       <span className={styles["suggestion-icon"]}>{suggestion.icon}</span>
                       <span className={styles["suggestion-text"]}>{suggestion.text}</span>
                       <span className={styles["suggestion-type"]}>
-                        {suggestion.type === "building" ? "건물" : "편의시설"}
+                        {suggestion.type === "building" ? "건물" : 
+                         suggestion.type === "facility" ? "편의시설" : 
+                         suggestion.type === "navigation" ? 
+                           (suggestion.category === "bus" ? "버스 정보" : 
+                            suggestion.category === "assist" ? "학생지원" : 
+                            suggestion.category === "newB" ? "재학생 정보" : 
+                            suggestion.category === "club" ? "동아리" : "기타") : 
+                         "기타"}
                       </span>
                     </div>
                   ))}
                   {popularTerms.length > 0 && <div className={styles["divider"]}></div>}
                 </>
               )}
-              
-              {/* 인기 검색어 섹션 */}
+
               {popularTerms.length > 0 && (
                 <>
-                  {!query.trim() && (
-                    <div className={styles["section-header"]}>
-                      🔥 인기 검색어
-                    </div>
-                  )}
+                  {!query.trim() && <div className={styles["section-header"]}>🔥 인기 검색어</div>}
                   {popularTerms.map((term, index) => {
                     const actualIndex = suggestions.length + index;
                     return (
                       <div
                         key={`popular-${term.id}`}
-                        className={`${styles["popular-item"]} ${
-                          actualIndex === selectedSuggestionIndex ? styles["suggestion-selected"] : ""
-                        }`}
+                        className={`${styles["popular-item"]} ${actualIndex === selectedSuggestionIndex ? styles["suggestion-selected"] : ""}`}
                         onClick={() => handlePopularTermClick(term)}
                         onMouseEnter={() => setSelectedSuggestionIndex(actualIndex)}
                       >
@@ -422,25 +397,15 @@ export const Nav = ({ activeTab, setActiveTab, onSearch, texts, onToggleLang }) 
                   })}
                 </>
               )}
-              
-              {/* 로딩 상태 */}
-              {isLoadingPopular && suggestions.length === 0 && (
-                <div className={styles["loading-item"]}>
-                  검색어 불러오는 중...
-                </div>
-              )}
-              
-              {/* 검색 결과 없음 */}
+
+              {isLoadingPopular && suggestions.length === 0 && <div className={styles["loading-item"]}>검색어 불러오는 중...</div>}
+
               {!isLoadingPopular && suggestions.length === 0 && popularTerms.length === 0 && query.trim() && (
-                <div className={styles["no-results"]}>
-                  검색 결과가 없습니다
-                </div>
+                <div className={styles["no-results"]}>검색 결과가 없습니다</div>
               )}
-               {/* 빈 검색창 상태 */}
-               {!isLoadingPopular && suggestions.length === 0 && popularTerms.length === 0 && !query.trim() && (
-                <div className={styles["no-results"]}>
-                  인기 검색어 로드 실패 또는 검색 기록 없음
-                </div>
+
+              {!isLoadingPopular && suggestions.length === 0 && popularTerms.length === 0 && !query.trim() && (
+                <div className={styles["no-results"]}>인기 검색어 로드 실패 또는 검색 기록 없음</div>
               )}
             </div>
           )}
@@ -448,35 +413,17 @@ export const Nav = ({ activeTab, setActiveTab, onSearch, texts, onToggleLang }) 
 
         <div className={styles["auth-lang-container"]}>
           {user ? (
-            // 로그인 상태일 때
             <>
               <div className={styles["user-info"]}>
-                {user.photoURL && (
-                  <img
-                    src={user.photoURL}
-                    alt="Profile"
-                    className={styles["profile-img"]}
-                  />
-                )}
-                <span className={styles["user-name"]}>
-                  {user.displayName || user.email}
-                </span>
+                {user.photoURL && <img src={user.photoURL} alt="Profile" className={styles["profile-img"]} />}
+                <span className={styles["user-name"]}>{user.displayName || user.email}</span>
               </div>
-              <button
-                className={styles["auth-btn"]}
-                onClick={handleLogoutClick}
-                disabled={loading}
-              >
+              <button className={styles["auth-btn"]} onClick={handleLogoutClick} disabled={loading}>
                 {loading ? "..." : texts.auth.logout}
               </button>
             </>
           ) : (
-            // 로그아웃 상태일 때: "로그인" 버튼 하나만 표시
-            <button
-              className={styles["auth-btn"]}
-              onClick={() => setShowLoginModal(true)} // 👈 클릭 시 모달 열기
-              disabled={loading}
-            >
+            <button className={styles["auth-btn"]} onClick={() => setShowLoginModal(true)} disabled={loading}>
               {loading ? "..." : texts.auth.login || "로그인"}
             </button>
           )}
@@ -490,10 +437,7 @@ export const Nav = ({ activeTab, setActiveTab, onSearch, texts, onToggleLang }) 
         <ul>
           {tabs.map((tab) => (
             <li key={tab.id}>
-              <button
-                onClick={() => setActiveTab(tab.id)}
-                className={activeTab === tab.id ? styles["active-tab"] : ""}
-              >
+              <button onClick={() => setActiveTab(tab.id)} className={activeTab === tab.id ? styles["active-tab"] : ""}>
                 {tab.label}
               </button>
             </li>

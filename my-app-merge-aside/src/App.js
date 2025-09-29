@@ -130,7 +130,28 @@ function App() {
       
       if (hit.type === "building") {
         console.log('🏢 건물 핸들러 호출:', hit.name);
-        handleSelectBuilding(hit.name);
+        // 영어 건물명을 한국어로 변환하는 매핑
+        const buildingNameMap = {
+          "Janggong Hall (Main)": "장공관(본관)",
+          "Pilhyeon Hall": "필현관", 
+          "Manwoo Hall": "만우관",
+          "Shalom Chapel": "샬롬채플",
+          "Immanuel Hall (Student Union)": "임마누엘관(학생회관)",
+          "Gyeongsam Hall (Library)": "경삼관(도서관)",
+          "Songam Hall": "송암관",
+          "Sotong Hall": "소통관", 
+          "Learning Practice Building": "학습실습동",
+          "Hanul Hall (Gymnasium)": "한울관(체육관)",
+          "Seongbin Dormitory": "성빈학사(생활관)",
+          "Saerometer": "새롬터",
+          "Haeoreum Hall": "해오름관",
+          "Jangjunha Unification Hall": "장준하통일관",
+          "Neutbom Hall": "늦봄관"
+        };
+        
+        const koreanName = buildingNameMap[hit.name] || hit.name;
+        console.log('🔄 건물명 변환:', hit.name, '->', koreanName);
+        handleSelectBuilding(koreanName);
       } else if (hit.type === "facility") {
         console.log('🏪 편의시설 핸들러 호출:', hit.category, hit.item);
         console.log('🏪 handleSelectFacility 함수:', typeof handleSelectFacility);

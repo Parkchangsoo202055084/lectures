@@ -80,16 +80,9 @@ export function makeSearchIndex() {
     const busInfo = texts[lang].busInfo;
     Object.keys(busInfo).forEach((key) => {
       if (key !== 'notSelected' && key !== 'notReady' && key !== 'imageAlt' && busInfo[key].title) {
+        // 키로만 검색 가능하게 (중복 방지)
         navigationIndex.set(norm(key), {
           type: "navigation",
-          tab: "bus",
-          item: key,
-          title: busInfo[key].title
-        });
-        
-        // 제목으로도 검색 가능하게
-        navigationIndex.set(norm(busInfo[key].title), {
-          type: "navigation", 
           tab: "bus",
           item: key,
           title: busInfo[key].title
@@ -101,17 +94,11 @@ export function makeSearchIndex() {
     const assistDetails = texts[lang].assistDetails;
     Object.keys(assistDetails).forEach((key) => {
       if (key !== 'notSelected' && key !== 'notReady' && assistDetails[key].title) {
+        // 키로만 검색 가능하게 (중복 방지)
         navigationIndex.set(norm(key), {
           type: "navigation",
           tab: "assist", 
           item: key,
-          title: assistDetails[key].title
-        });
-        
-        navigationIndex.set(norm(assistDetails[key].title), {
-          type: "navigation",
-          tab: "assist",
-          item: key, 
           title: assistDetails[key].title
         });
       }
