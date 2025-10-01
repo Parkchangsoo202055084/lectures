@@ -44,42 +44,68 @@ export const Nav = ({ activeTab, setActiveTab, onSearch, texts, onToggleLang }) 
   };
 
   // 연관 검색어 생성
-  const generateSuggestions = (inputQuery) => {
-    if (!inputQuery.trim()) return [];
+  // generateSuggestions 함수 수정 부분만
 
-    const normalizedQuery = norm(inputQuery);
-    const suggestions = [];
-    const maxSuggestions = 6;
+const generateSuggestions = (inputQuery) => {
+  if (!inputQuery.trim()) return [];
 
-    for (const [key, value] of searchIndex.buildingIndex) {
-      if (suggestions.length >= maxSuggestions) break;
-      if (key.includes(normalizedQuery) || normalizedQuery.includes(key)) {
-        suggestions.push({ text: value.name, type: "building", icon: "🏢", source: "index" });
-      }
+  const normalizedQuery = norm(inputQuery);
+  const suggestions = [];
+  const maxSuggestions = 6;
+  const seen = new Set();
+
+  // 동아리 우선 검색
+  for (const [key, value] of searchIndex.clubIndex) {
+    if (suggestions.length >= maxSuggestions) break;
+    const uniqueKey = `club-${value.name}`;
+    if ((key.includes(normalizedQuery) || normalizedQuery.includes(key)) && !seen.has(uniqueKey)) {
+      suggestions.push({ 
+        text: value.name, 
+        type: "club", 
+        icon: "🎭", 
+        source: "index",
+        category: value.category
+      });
+      seen.add(uniqueKey);
     }
+  }
 
-    for (const [key, value] of searchIndex.facilityIndex) {
-      if (suggestions.length >= maxSuggestions) break;
-      if (key.includes(normalizedQuery) || normalizedQuery.includes(key)) {
-        suggestions.push({ text: value.item, type: "facility", icon: "🏪", source: "index" });
-      }
+  // 건물
+  for (const [key, value] of searchIndex.buildingIndex) {
+    if (suggestions.length >= maxSuggestions) break;
+    if ((key.includes(normalizedQuery) || normalizedQuery.includes(key)) && !seen.has(value.name)) {
+      suggestions.push({ text: value.name, type: "building", icon: "🏢", source: "index" });
+      seen.add(value.name);
     }
+  }
 
-    for (const [key, value] of searchIndex.navigationIndex) {
-      if (suggestions.length >= maxSuggestions) break;
-      if (key.includes(normalizedQuery) || normalizedQuery.includes(key)) {
-        suggestions.push({
-          text: value.title || value.item,
-          type: "navigation",
-          icon: value.tab === "bus" ? "🚌" : value.tab === "assist" ? "ℹ️" : value.tab === "newB" ? "📅" : "🎭",
-          source: "index",
-          category: value.tab
-        });
-      }
+  // 편의시설
+  for (const [key, value] of searchIndex.facilityIndex) {
+    if (suggestions.length >= maxSuggestions) break;
+    if ((key.includes(normalizedQuery) || normalizedQuery.includes(key)) && !seen.has(value.item)) {
+      suggestions.push({ text: value.item, type: "facility", icon: "🏪", source: "index" });
+      seen.add(value.item);
     }
+  }
 
-    return suggestions;
-  };
+  // 네비게이션
+  for (const [key, value] of searchIndex.navigationIndex) {
+    if (suggestions.length >= maxSuggestions) break;
+    const uniqueKey = `${value.tab}-${value.item}`;
+    if ((key.includes(normalizedQuery) || normalizedQuery.includes(key)) && !seen.has(uniqueKey)) {
+      suggestions.push({
+        text: value.title || value.item,
+        type: "navigation",
+        icon: value.tab === "bus" ? "🚌" : value.tab === "assist" ? "ℹ️" : value.tab === "newB" ? "📅" : "🎭",
+        source: "index",
+        category: value.tab
+      });
+      seen.add(uniqueKey);
+    }
+  }
+
+  return suggestions;
+};
 
   const tabs = [
     { id: "map", label: texts.aside.map.title },
@@ -364,7 +390,8 @@ export const Nav = ({ activeTab, setActiveTab, onSearch, texts, onToggleLang }) 
                       <span className={styles["suggestion-text"]}>{suggestion.text}</span>
                       <span className={styles["suggestion-type"]}>
                         {suggestion.type === "building" ? "건물" : 
-                         suggestion.type === "facility" ? "편의시설" : 
+                         suggestion.type === "facility" ? "편의시설" :
+                         suggestion.type === "club" ? `동아리 (${suggestion.category})` : 
                          suggestion.type === "navigation" ? 
                            (suggestion.category === "bus" ? "버스 정보" : 
                             suggestion.category === "assist" ? "학생지원" : 

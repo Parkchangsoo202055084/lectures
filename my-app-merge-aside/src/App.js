@@ -24,39 +24,37 @@ const Container = styled.div`
   display: flex;
 `;
 
-// 기존: 탭 전환 시 map 섹션만 표시
 const MapSection = styled.div`
   width: 100%;
   display: ${(props) => (props.active ? "block" : "none")};
 `;
 
-// 추가: 지도와 패널을 옆으로 배치
 const MapLayout = styled.div`
   display: flex;
   gap: 16px;
 `;
 
 const MapBox = styled.div`
-  flex: 2; /* 지도 공간 크게 */
+  flex: 2;
 `;
 
 const DetailBox = styled.div`
-  flex: 1; /* 설명 공간 */
+  flex: 1;
   overflow-y: auto;
-  max-height: 600px; /* 지도와 동일한 높이로 제한 */
+  max-height: 600px;
 `;
 
 function App() {
   const [activeTab, setActiveTab] = useState("map");
   const [detail, setDetail] = useState(null);
   const [selectedItem, setSelectedItem] = useState(null);
+  const [selectedClub, setSelectedClub] = useState(null); // 동아리 검색용
   const [lang, setLang] = useState("ko");
 
   const toggleLang = () => {
     setLang((prevLang) => (prevLang === "ko" ? "en" : "ko"));
   };
 
-  // Kakao 지도 훅
   const { mapRef, markerRef, infoRef, ready, relayout } = useKakaoMap({
     activeTab,
     containerId: "map",
@@ -88,7 +86,6 @@ function App() {
     [mapRef, markerRef, infoRef, ready]
   );
 
-  // 검색 인덱스 준비
   const searchIndexData = useMemo(() => makeSearchIndex(), []);
 
   const runSearch = (query) => {
@@ -99,7 +96,7 @@ function App() {
     
     if (!hit) {
       console.log('❌ 검색 결과 없음');
-      console.log(texts[lang].nav.searchNoResult);
+      alert(texts[lang].nav.searchNoResult);
       return;
     }
     
@@ -109,9 +106,21 @@ function App() {
     console.log('📍 아이템:', hit.item);
     console.log('📍 이름:', hit.name);
     
-    setActiveTab("map");
+    // 동아리 검색 처리
+    if (hit.type === "club") {
+      console.log('🎭 동아리 검색:', hit.name, '분과:', hit.category);
+      setActiveTab("club");
+      setSelectedItem(texts[lang].aside.club.items[0]); // "중앙동아리" 항목 선택
+      setSelectedClub(hit); // 검색된 동아리 정보 저장
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
 
-    // 지도 준비 대기
+    // 기존 검색 처리 (건물, 편의시설, 네비게이션)
+    if (hit.type === "building" || hit.type === "facility") {
+      setActiveTab("map");
+    }
+
     const waitUntil = (cond, ms = 50, tries = 40) =>
       new Promise((res) => {
         let n = 0;
@@ -125,12 +134,9 @@ function App() {
 
     waitUntil(() => ready && !!mapRef.current).then(() => {
       console.log('🗺️ 지도 준비 완료, 핸들러 호출 중...');
-      console.log('🗺️ ready 상태:', ready);
-      console.log('🗺️ mapRef.current 존재:', !!mapRef.current);
       
       if (hit.type === "building") {
         console.log('🏢 건물 핸들러 호출:', hit.name);
-        // 영어 건물명을 한국어로 변환하는 매핑
         const buildingNameMap = {
           "Janggong Hall (Main)": "장공관(본관)",
           "Pilhyeon Hall": "필현관", 
@@ -150,11 +156,9 @@ function App() {
         };
         
         const koreanName = buildingNameMap[hit.name] || hit.name;
-        console.log('🔄 건물명 변환:', hit.name, '->', koreanName);
         handleSelectBuilding(koreanName);
       } else if (hit.type === "facility") {
         console.log('🏪 편의시설 핸들러 호출:', hit.category, hit.item);
-        console.log('🏪 handleSelectFacility 함수:', typeof handleSelectFacility);
         handleSelectFacility(hit.category, hit.item);
       } else if (hit.type === "navigation") {
         console.log('📋 네비게이션 항목으로 이동:', hit.tab, hit.item);
@@ -166,12 +170,18 @@ function App() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // 맵 탭으로 돌아올 때 relayout 호출 (존재 시)
   useEffect(() => {
     if (activeTab === "map" && ready && typeof relayout === "function") {
       requestAnimationFrame(() => relayout());
     }
   }, [activeTab, ready, relayout]);
+
+  // 탭 변경 시 동아리 선택 초기화
+  useEffect(() => {
+    if (activeTab !== "club") {
+      setSelectedClub(null);
+    }
+  }, [activeTab]);
 
   return (
     <>
@@ -193,7 +203,6 @@ function App() {
         />
 
         <div style={{ padding: "20px", flexGrow: 1 }}>
-          {/* 변경: 지도/상세 패널을 가로 배치 */}
           <MapSection active={activeTab === "map"}>
             <MapLayout>
               <MapBox>
@@ -228,7 +237,10 @@ function App() {
           {activeTab === "club" && (
             <>
               {selectedItem === texts[lang].aside.club.items[0] && (
-                <ClubHub texts={texts[lang].clubDetails.centralClub} />
+                <ClubHub 
+                  texts={texts[lang].clubDetails.centralClub}
+                  initialClub={selectedClub}
+                />
               )}
               {selectedItem === texts[lang].aside.club.items[1] && (
                 <div style={{ padding: 20 }}>
