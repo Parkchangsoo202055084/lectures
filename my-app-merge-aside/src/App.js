@@ -1,4 +1,4 @@
-// FILE: src/App.js
+// App.js
 import React, { useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
 import {Nav} from "./components/Nav";
@@ -48,11 +48,19 @@ function App() {
   const [activeTab, setActiveTab] = useState("map");
   const [detail, setDetail] = useState(null);
   const [selectedItem, setSelectedItem] = useState(null);
-  const [selectedClub, setSelectedClub] = useState(null); // 동아리 검색용
+  const [selectedClub, setSelectedClub] = useState(null);
   const [lang, setLang] = useState("ko");
+  
+  // ⭐️ 모바일 사이드바 상태 추가
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const toggleLang = () => {
     setLang((prevLang) => (prevLang === "ko" ? "en" : "ko"));
+  };
+
+  // ⭐️ 사이드바 토글 함수
+  const toggleSidebar = () => {
+    setIsSidebarOpen(prev => !prev);
   };
 
   const { mapRef, markerRef, infoRef, ready, relayout } = useKakaoMap({
@@ -110,8 +118,10 @@ function App() {
     if (hit.type === "club") {
       console.log('🎭 동아리 검색:', hit.name, '분과:', hit.category);
       setActiveTab("club");
-      setSelectedItem(texts[lang].aside.club.items[0]); // "중앙동아리" 항목 선택
-      setSelectedClub(hit); // 검색된 동아리 정보 저장
+      setSelectedItem(texts[lang].aside.club.items[0]);
+      setSelectedClub(hit);
+      // ⭐️ 모바일에서 사이드바 닫기
+      setIsSidebarOpen(false);
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
@@ -119,6 +129,8 @@ function App() {
     // 기존 검색 처리 (건물, 편의시설, 네비게이션)
     if (hit.type === "building" || hit.type === "facility") {
       setActiveTab("map");
+      // ⭐️ 모바일에서 사이드바 닫기
+      setIsSidebarOpen(false);
     }
 
     const waitUntil = (cond, ms = 50, tries = 40) =>
@@ -164,6 +176,8 @@ function App() {
         console.log('📋 네비게이션 항목으로 이동:', hit.tab, hit.item);
         setActiveTab(hit.tab);
         setSelectedItem(hit.item);
+        // ⭐️ 모바일에서 사이드바 닫기
+        setIsSidebarOpen(false);
       }
     });
 
@@ -176,7 +190,6 @@ function App() {
     }
   }, [activeTab, ready, relayout]);
 
-  // 탭 변경 시 동아리 선택 초기화
   useEffect(() => {
     if (activeTab !== "club") {
       setSelectedClub(null);
@@ -189,17 +202,20 @@ function App() {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         onSearch={runSearch}
-        lang={lang}
         texts={texts[lang]}
         onToggleLang={toggleLang}
       />
       <Container>
         <Aside
           activeTab={activeTab}
+          setActiveTab={setActiveTab}
           onSelectBuilding={handleSelectBuilding}
           onSelectFacility={handleSelectFacility}
           onSelectItem={setSelectedItem}
           texts={texts[lang]}
+          // ⭐️ 사이드바 props 추가
+          isSidebarOpen={isSidebarOpen}
+          onToggleSidebar={toggleSidebar}
         />
 
         <div style={{ padding: "20px", flexGrow: 1 }}>

@@ -1,5 +1,6 @@
 /* Aside.module.css */
 
+/* ========== PC 사이드바 스타일 ========== */
 .aside {
   width: 296px;
   height: 100vh;
@@ -10,108 +11,240 @@
   box-sizing: border-box;
 }
 
-.asideSection {
-  margin-bottom: 24px;
+.asideSection { 
+  margin-bottom: 24px; 
 }
 
-.asideSection h3 {
-  font-size: 16px;
-  margin-bottom: 8px;
-  color: #004d99;
-  border-bottom: 1px solid #ccc;
+.title { 
+  margin: 6px 0 10px; 
+  font-size: 16px; 
+  color: #004d99; 
+  border-bottom: 1px solid #ccc; 
+  padding-bottom: 4px; 
+}
+
+.subTitle { 
+  margin: 14px 0 8px; 
+}
+
+.asideList { 
+  list-style: none; 
+  margin: 8px 0; 
+  padding: 0; 
+}
+
+.asideList li { 
+  padding: 6px 0; 
+  cursor: pointer; 
+  transition: background 0.2s; 
+}
+
+.asideList li:hover { 
+  background-color: #e0e0e0; 
+}
+
+.sectionButton { 
+  width: 100%; 
+  display: flex; 
+  align-items: center; 
+  gap: 8px; 
+  padding: 8px 10px; 
+  border: 1px solid #eee; 
+  border-radius: 8px; 
+  background: #fff; 
+  cursor: pointer; 
+}
+
+.sectionButton:hover { 
+  background: #faf7ff; 
+  border-color: #e8def8; 
+}
+
+.treeButton { 
+  display: flex; 
+  align-items: center; 
+  gap: 8px; 
+  padding: 6px 6px; 
+  background: transparent; 
+  border: 0; 
+  cursor: pointer; 
+}
+
+.itemButton { 
+  width: 100%; 
+  text-align: left; 
+  background: #fff; 
+  border: 1px solid #eee; 
+  border-radius: 8px; 
+  padding: 6px 10px; 
+  cursor: pointer; 
+}
+
+.itemButton:hover { 
+  background: #fafafa; 
+}
+
+.caret { 
+  width: 8px; 
+  height: 8px; 
+  border-right: 2px solid #5f41b9; 
+  border-bottom: 2px solid #5f41b9; 
+  transform: rotate(45deg); 
+  transition: transform 0.18s ease; 
+  flex: 0 0 auto; 
+  margin-left: 2px; 
+}
+
+.caret[data-open="true"] { 
+  transform: rotate(135deg); 
+}
+
+.section { 
+  margin-bottom: 10px; 
+}
+
+
+/* ========== 모바일 하단 네비게이션 ========== */
+.bottomNav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 60px;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  background: #fff;
+  border-top: 1px solid #ddd;
+  box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
+  z-index: 2001; /* 사이드바보다 위에 표시 */
+}
+
+.navButton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #666;
+  transition: color 0.2s;
+  padding: 8px;
+  flex: 1;
+}
+
+.navButton:active {
+  background-color: #f0f0f0;
+}
+
+.hamburgerButton {
+  color: #5f41b9;
+  font-weight: 600;
+}
+
+.hamburgerActive {
+  color: #e91e63;
+  font-weight: 700;
+}
+
+.activeTab {
+  color: #5f41b9;
+  font-weight: 600;
+}
+
+
+/* ========== 모바일 팝업 메뉴 ========== */
+
+/* 배경 오버레이 */
+.mobile-menu-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.3);
+  z-index: 1998;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* 팝업 메뉴 패널 */
+.mobile-menu-popup {
+  position: fixed;
+  bottom: 70px; /* 하단 네비게이션 바로 위 */
+  
+  width: 180px; /* 작은 팝업 크기 */
+  max-height: 400px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1999;
+  overflow: hidden;
+  animation: slideUp 0.2s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* 메뉴 컨텐츠 */
+.menu-content {
+  padding: 8px;
+  overflow-y: auto;
+  max-height: 400px;
+}
+
+/* 메뉴 내부 스타일 조정 */
+.menu-content .asideSection {
+  margin-bottom: 0;
+}
+
+.menu-content .title {
+  font-size: 14px;
+  margin: 4px 0 8px;
   padding-bottom: 4px;
 }
 
-.asideList {
-  list-style: none;
-  padding-left: 0;
+.menu-content .asideList li {
+  padding: 8px 12px;
+  font-size: 14px;
+  border-radius: 4px;
 }
 
-.asideList li {
-  padding: 6px 0;
-  cursor: pointer;
-  transition: background 0.2s;
+.menu-content .sectionButton {
+  padding: 8px 12px;
+  font-size: 14px;
 }
 
-.asideList li:hover {
-  background-color: #e0e0e0;
+.menu-content .itemButton {
+  padding: 8px 12px;
+  font-size: 14px;
 }
 
-/* 섹션 헤더 버튼 */
-.sectionButton {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 10px;
-  border: 1px solid #eee;
-  border-radius: 8px;
-  background: #fff;
-  cursor: pointer;
-}
-.sectionButton:hover {
-  background: #faf7ff;
-  border-color: #e8def8;
+
+/* ========== 반응형 처리 ========== */
+@media (max-width: 768px) {
+  .aside {
+    display: none; /* 모바일에서는 PC 사이드바 숨김 */
+  }
 }
 
-/* 트리 라벨 버튼 */
-.treeButton {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 6px;
-  background: transparent;
-  border: 0;
-  cursor: pointer;
-}
-
-/* 아이템 버튼(기존 li 클릭을 버튼화) */
-.itemButton {
-  width: 100%;
-  text-align: left;
-  background: #fff;
-  border: 1px solid #eee;
-  border-radius: 8px;
-  padding: 6px 10px;
-  cursor: pointer;
-}
-.itemButton:hover {
-  background: #fafafa;
-}
-
-/* 텍스트 제목 정리 */
-.title {
-  margin: 6px 0 10px;
-}
-.subTitle {
-  margin: 14px 0 8px;
-}
-
-/* ▶ 모양의 보라색 체브론 (CSS만으로 그림) */
-.caret {
-  width: 8px;
-  height: 8px;
-  border-right: 2px solid #5f41b9;
-  border-bottom: 2px solid #5f41b9;
-  transform: rotate(45deg); /* 닫힘: 우측(▶) */
-  transition: transform 0.18s ease;
-  flex: 0 0 auto;
-  margin-left: 2px;
-}
-
-/* 열림 상태(▼) */
-.caret[data-open="true"] {
-  transform: rotate(135deg);
-}
-
-/* 목록 기본 */
-.asideList {
-  list-style: none;
-  margin: 8px 0;
-  padding: 0;
-}
-
-/* 섹션 컨테이너 마진 */
-.section {
-  margin-bottom: 10px;
+@media (min-width: 769px) {
+  .bottomNav,
+  .mobile-menu-backdrop,
+  .mobile-menu-popup {
+    display: none; /* PC에서는 모바일 UI 숨김 */
+  }
 }
