@@ -3,7 +3,7 @@
 /* ========== PC 사이드바 스타일 ========== */
 .aside {
   width: 296px;
-  height: 100vh;
+  height: 85vh;
   overflow-y: auto;
   border-right: 1px solid #bfbfbf;
   background-color: #f5f5f5;
