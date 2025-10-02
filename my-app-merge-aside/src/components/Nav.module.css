@@ -4,9 +4,11 @@
 .header {
     width: 100%;
     background-color: #410f67;
-    position: sticky; 
+    position: fixed;
     top: 0;
-    z-index: 100;
+    left: 0;
+    right: 0;
+    z-index: 1000;
 }
 
 .top-bar {
@@ -17,7 +19,6 @@
     background-color: #291355;
     color: white;
     gap: 20px;
-
     position: relative; 
     z-index: 101; 
 }
@@ -187,6 +188,7 @@
     font-size: 14px;
     background-color: white;
 }
+
 /* --- 인증/언어 컨테이너 --- */
 .auth-lang-container {
     display: flex;
@@ -293,8 +295,7 @@
     display: none;
 }
 
-
-/* --- 모달 스타일 (모바일 검색 모달 관련 CSS는 모두 제거됨) --- */
+/* --- 모달 스타일 --- */
 .modal-backdrop {
     position: fixed;
     top: 0;
@@ -419,57 +420,52 @@
 /* --- 2. 맞춤형 반응형 최적화: 모바일 (768px 이하) --- */
 /* ---------------------------------------------------------------------- */
 @media (max-width: 768px) {
-    /* Header: 모바일에서는 스크롤에 따라 움직이도록 sticky 해제 */
     .header {
-        position: relative;
+        position: fixed;
+        top: 0;
+        height: 60px;
     }
     
-    /* Top Bar: 로고(좌)와 버튼/검색(우)를 가로로 배치 */
     .top-bar {
         flex-direction: row; 
-        padding: 10px 10px;
+        padding: 8px 12px;
         gap: 5px; 
         align-items: center;
+        height: 60px;
     }
     
     .logo img {
-        height: 35px; /* 로고 크기 축소 */
+        height: 35px;
     }
     
-    /* PC용 검색 컨테이너를 모바일에서 숨김 (일반 .search-container) */
     .search-container {
         display: none;
     }
 
-    /* ⭐️ 모바일 전용 인라인 검색 컨테이너 활성화 및 배치 */
     .search-container-mobile {
         display: flex; 
         flex-grow: 1; 
         margin: 0 5px;
         max-width: none;
-        position: relative; /* 드롭다운의 기준점 */
-        z-index: 9999; /* 👈 z-index를 최대로 높여 드롭다운 노출 보장 */
+        position: relative;
+        z-index: 9999;
     }
 
-    /* 모바일 전용 검색 버튼 (아이콘)은 이제 사용하지 않으므로 숨김 */
     .mobile-search-btn {
         display: none; 
     }
     
-    /* 모바일에서 언어 버튼을 auth-lang-container에서 숨김 */
     .auth-lang-container .lang-btn {
         display: none;
     }
 
-    /* 인증/로그인 컨테이너 */
     .auth-lang-container {
         justify-content: flex-end; 
         gap: 5px; 
         flex-grow: 0; 
-        z-index: 9998; /* 검색 컨테이너보다 낮게 설정 */
+        z-index: 9998;
     }
 
-    /* 모바일 전용 언어 변경 바 (상단 바 아래에 배치) */
     .mobile-lang-bar {
         display: flex;
         justify-content: center;
@@ -483,39 +479,21 @@
         border-radius: 15px;
     }
     
-    /* Nav Bar (탭 메뉴) */
     .nav-bar {
-        padding: 10px 10px;
+        display: none;
     }
     
-    .nav-bar ul {
-        justify-content: flex-start;
-        display: inline-flex;
-        gap: 15px;
-    }
-    
-    .nav-bar button {
-        font-size: 13px;
-    }
-    
-    /* ⭐️ 모바일용 드롭다운 스타일 (내비게이션 크기에 영향 없이 떠 있도록 설정) */
     .suggestions-dropdown-mobile {
-        position: absolute; /* 👈 내비게이션 바 크기 고정 */
-        top: calc(100% + 5px); /* 검색창 바로 아래에 5px 간격 */
-        
-        /* 화면 중앙에 배치하고 너비를 뷰포트에 맞춥니다. */
+        position: absolute;
+        top: calc(100% + 5px);
         width: 95vw; 
         left: 50%;
-        transform: translateX(-50%); /* 중앙 정렬 */
-        
-        /* 전체 화면을 덮지 않도록 최대 높이 제한 */
+        transform: translateX(-50%);
         max-height: 50vh; 
         overflow-y: auto;
-        
         border-radius: 8px; 
-        background: white; /* 배경색 명시 */
+        background: white;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); 
-        z-index: 10000; /* 👈 z-index를 최대로 설정하여 반드시 보이도록 함 */
+        z-index: 10000;
     }
-
 }

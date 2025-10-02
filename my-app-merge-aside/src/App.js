@@ -22,11 +22,29 @@ import { texts } from "./utils/texts";
 
 const Container = styled.div`
   display: flex;
+
+  @media (min-width: 769px) {
+    margin-top: 120px; 
+  }
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+  }
 `;
 
 const MapSection = styled.div`
   width: 100%;
   display: ${(props) => (props.active ? "block" : "none")};
+
+  @media (max-width: 768px) {
+    position: fixed;
+    top: 60px;
+    left: 0;
+    right: 0;
+    bottom: 60px;
+    z-index: 1;
+    overflow: hidden;
+  }
 `;
 
 const MapLayout = styled.div`
@@ -36,6 +54,8 @@ const MapLayout = styled.div`
   @media (max-width: 768px) {
     flex-direction: column;
     gap: 0;
+    height: 100%;
+    width: 100%;
   }
 `;
 
@@ -43,9 +63,15 @@ const MapBox = styled.div`
   flex: 2;
 
   @media (max-width: 768px) {
-    flex: 1;
     width: 100%;
-    height: calc(100vh - 60px); /* Nav 높이를 제외 */
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    
+    & > div {
+      width: 100% !important;
+      height: 100% !important;
+    }
   }
 `;
 
@@ -64,7 +90,8 @@ const MobilePopup = styled.div`
   display: none;
 
   @media (max-width: 768px) {
-    display: ${(props) => (props.isOpen ? "block" : "none")};
+    display: ${(props) => (props.isOpen ? "flex" : "none")};
+    flex-direction: column;
     position: fixed;
     bottom: 0;
     left: 0;
@@ -73,8 +100,7 @@ const MobilePopup = styled.div`
     border-radius: 20px 20px 0 0;
     box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
     max-height: 70vh;
-    overflow-y: auto;
-    z-index: 1000;
+    z-index: 1001;
     animation: slideUp 0.3s ease-out;
 
     @keyframes slideUp {
@@ -128,6 +154,8 @@ const CloseButton = styled.button`
 
 const PopupContent = styled.div`
   padding: 20px;
+  overflow-y: auto;
+  flex: 1;
 `;
 
 // 팝업 배경 오버레이
@@ -156,6 +184,28 @@ function App() {
   
   // 모바일 팝업 상태
   const [isMobilePopupOpen, setIsMobilePopupOpen] = useState(false);
+
+  // 모바일에서 지도 탭일 때 body 스크롤 방지
+  useEffect(() => {
+    if (window.innerWidth <= 768 && activeTab === 'map') {
+      document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.width = '100%';
+      document.body.style.height = '100%';
+    } else {
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+      document.body.style.height = '';
+    }
+    
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+      document.body.style.height = '';
+    };
+  }, [activeTab]);
 
   const toggleLang = () => {
     setLang((prevLang) => (prevLang === "ko" ? "en" : "ko"));
