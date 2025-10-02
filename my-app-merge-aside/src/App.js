@@ -32,16 +32,118 @@ const MapSection = styled.div`
 const MapLayout = styled.div`
   display: flex;
   gap: 16px;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: 0;
+  }
 `;
 
 const MapBox = styled.div`
   flex: 2;
+
+  @media (max-width: 768px) {
+    flex: 1;
+    width: 100%;
+    height: calc(100vh - 60px); /* Nav 높이를 제외 */
+  }
 `;
 
 const DetailBox = styled.div`
   flex: 1;
   overflow-y: auto;
   max-height: 600px;
+
+  @media (max-width: 768px) {
+    display: none; /* 모바일에서는 숨김 */
+  }
+`;
+
+// 모바일 팝업 스타일
+const MobilePopup = styled.div`
+  display: none;
+
+  @media (max-width: 768px) {
+    display: ${(props) => (props.isOpen ? "block" : "none")};
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    border-radius: 20px 20px 0 0;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+    max-height: 70vh;
+    overflow-y: auto;
+    z-index: 1000;
+    animation: slideUp 0.3s ease-out;
+
+    @keyframes slideUp {
+      from {
+        transform: translateY(100%);
+      }
+      to {
+        transform: translateY(0);
+      }
+    }
+  }
+`;
+
+const PopupHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #eee;
+  position: sticky;
+  top: 0;
+  background: white;
+  z-index: 1;
+`;
+
+const PopupHandle = styled.div`
+  width: 40px;
+  height: 4px;
+  background: #ddd;
+  border-radius: 2px;
+  margin: 8px auto 0;
+`;
+
+const CloseButton = styled.button`
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #666;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    color: #000;
+  }
+`;
+
+const PopupContent = styled.div`
+  padding: 20px;
+`;
+
+// 팝업 배경 오버레이
+const PopupOverlay = styled.div`
+  display: none;
+
+  @media (max-width: 768px) {
+    display: ${(props) => (props.isOpen ? "block" : "none")};
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.3);
+    z-index: 999;
+  }
 `;
 
 function App() {
@@ -50,17 +152,26 @@ function App() {
   const [selectedItem, setSelectedItem] = useState(null);
   const [selectedClub, setSelectedClub] = useState(null);
   const [lang, setLang] = useState("ko");
-  
-  // ⭐️ 모바일 사이드바 상태 추가
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  
+  // 모바일 팝업 상태
+  const [isMobilePopupOpen, setIsMobilePopupOpen] = useState(false);
 
   const toggleLang = () => {
     setLang((prevLang) => (prevLang === "ko" ? "en" : "ko"));
   };
 
-  // ⭐️ 사이드바 토글 함수
   const toggleSidebar = () => {
     setIsSidebarOpen(prev => !prev);
+  };
+
+  // 모바일 팝업 열기/닫기
+  const openMobilePopup = () => {
+    setIsMobilePopupOpen(true);
+  };
+
+  const closeMobilePopup = () => {
+    setIsMobilePopupOpen(false);
   };
 
   const { mapRef, markerRef, infoRef, ready, relayout } = useKakaoMap({
@@ -69,6 +180,13 @@ function App() {
     center: MAP_CENTER,
     level: DEFAULT_LEVEL,
   });
+
+  // detail이 변경될 때 모바일 팝업 열기
+  useEffect(() => {
+    if (detail && window.innerWidth <= 768) {
+      openMobilePopup();
+    }
+  }, [detail]);
 
   const handleSelectBuilding = useMemo(
     () =>
@@ -114,22 +232,18 @@ function App() {
     console.log('📍 아이템:', hit.item);
     console.log('📍 이름:', hit.name);
     
-    // 동아리 검색 처리
     if (hit.type === "club") {
       console.log('🎭 동아리 검색:', hit.name, '분과:', hit.category);
       setActiveTab("club");
       setSelectedItem(texts[lang].aside.club.items[0]);
       setSelectedClub(hit);
-      // ⭐️ 모바일에서 사이드바 닫기
       setIsSidebarOpen(false);
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
 
-    // 기존 검색 처리 (건물, 편의시설, 네비게이션)
     if (hit.type === "building" || hit.type === "facility") {
       setActiveTab("map");
-      // ⭐️ 모바일에서 사이드바 닫기
       setIsSidebarOpen(false);
     }
 
@@ -176,7 +290,6 @@ function App() {
         console.log('📋 네비게이션 항목으로 이동:', hit.tab, hit.item);
         setActiveTab(hit.tab);
         setSelectedItem(hit.item);
-        // ⭐️ 모바일에서 사이드바 닫기
         setIsSidebarOpen(false);
       }
     });
@@ -213,7 +326,6 @@ function App() {
           onSelectFacility={handleSelectFacility}
           onSelectItem={setSelectedItem}
           texts={texts[lang]}
-          // ⭐️ 사이드바 props 추가
           isSidebarOpen={isSidebarOpen}
           onToggleSidebar={toggleSidebar}
         />
@@ -228,6 +340,21 @@ function App() {
                 <MapDetailPanel detail={detail} texts={texts[lang].mapDetails} />
               </DetailBox>
             </MapLayout>
+
+            {/* 모바일 팝업 */}
+            <PopupOverlay isOpen={isMobilePopupOpen} onClick={closeMobilePopup} />
+            <MobilePopup isOpen={isMobilePopupOpen}>
+              <PopupHandle />
+              <PopupHeader>
+                <h3 style={{ margin: 0, fontSize: "18px" }}>
+                  {detail?.title || "상세 정보"}
+                </h3>
+                <CloseButton onClick={closeMobilePopup}>×</CloseButton>
+              </PopupHeader>
+              <PopupContent>
+                <MapDetailPanel detail={detail} texts={texts[lang].mapDetails} />
+              </PopupContent>
+            </MobilePopup>
           </MapSection>
 
           {activeTab === "bus" && (
