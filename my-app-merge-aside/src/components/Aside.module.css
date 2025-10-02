@@ -203,7 +203,6 @@
   padding: 16px;
   overflow-y: auto;
   height: 100%;
-  -webkit-overflow-scrolling: touch;
 }
 
 /* 메뉴 내부 스타일 조정 */

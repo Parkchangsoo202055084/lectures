@@ -24,7 +24,7 @@ const Container = styled.div`
   display: flex;
 
   @media (min-width: 769px) {
-    margin-top: 120px; 
+    margin-top: 120px;
   }
 
   @media (max-width: 768px) {
@@ -81,11 +81,10 @@ const DetailBox = styled.div`
   max-height: 600px;
 
   @media (max-width: 768px) {
-    display: none; /* 모바일에서는 숨김 */
+    display: none;
   }
 `;
 
-// 모바일 팝업 스타일
 const MobilePopup = styled.div`
   display: none;
 
@@ -158,7 +157,6 @@ const PopupContent = styled.div`
   flex: 1;
 `;
 
-// 팝업 배경 오버레이
 const PopupOverlay = styled.div`
   display: none;
 
@@ -181,17 +179,54 @@ function App() {
   const [selectedClub, setSelectedClub] = useState(null);
   const [lang, setLang] = useState("ko");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  
-  // 모바일 팝업 상태
   const [isMobilePopupOpen, setIsMobilePopupOpen] = useState(false);
+
+  // 모바일 여부 체크 (useState로 반응형 처리)
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const toggleLang = () => {
+    setLang((prevLang) => (prevLang === "ko" ? "en" : "ko"));
+  };
+
+  const toggleSidebar = () => {
+    setIsSidebarOpen(prev => !prev);
+  };
+
+  const openMobilePopup = () => {
+    setIsMobilePopupOpen(true);
+  };
+
+  const closeMobilePopup = () => {
+    setIsMobilePopupOpen(false);
+  };
+
+  const { mapRef, markerRef, infoRef, ready, relayout } = useKakaoMap({
+    activeTab,
+    containerId: "map",
+    center: MAP_CENTER,
+    level: isMobile ? 4 : DEFAULT_LEVEL,
+  });
+
+  // detail이 변경될 때 모바일 팝업 열기
+  useEffect(() => {
+    if (detail && isMobile) {
+      openMobilePopup();
+    }
+  }, [detail, isMobile]);
 
   // 모바일에서 지도 탭일 때 body 스크롤 방지
   useEffect(() => {
-    if (window.innerWidth <= 768 && activeTab === 'map') {
+    if (isMobile && activeTab === 'map') {
       document.body.style.overflow = 'hidden';
       document.body.style.position = 'fixed';
       document.body.style.width = '100%';
-      document.body.style.height = '100%';
+      document.body.style.height = '100vh';
     } else {
       document.body.style.overflow = '';
       document.body.style.position = '';
@@ -205,38 +240,7 @@ function App() {
       document.body.style.width = '';
       document.body.style.height = '';
     };
-  }, [activeTab]);
-
-  const toggleLang = () => {
-    setLang((prevLang) => (prevLang === "ko" ? "en" : "ko"));
-  };
-
-  const toggleSidebar = () => {
-    setIsSidebarOpen(prev => !prev);
-  };
-
-  // 모바일 팝업 열기/닫기
-  const openMobilePopup = () => {
-    setIsMobilePopupOpen(true);
-  };
-
-  const closeMobilePopup = () => {
-    setIsMobilePopupOpen(false);
-  };
-
-  const { mapRef, markerRef, infoRef, ready, relayout } = useKakaoMap({
-    activeTab,
-    containerId: "map",
-    center: MAP_CENTER,
-    level: DEFAULT_LEVEL,
-  });
-
-  // detail이 변경될 때 모바일 팝업 열기
-  useEffect(() => {
-    if (detail && window.innerWidth <= 768) {
-      openMobilePopup();
-    }
-  }, [detail]);
+  }, [activeTab, isMobile]);
 
   const handleSelectBuilding = useMemo(
     () =>
@@ -391,7 +395,6 @@ function App() {
               </DetailBox>
             </MapLayout>
 
-            {/* 모바일 팝업 */}
             <PopupOverlay isOpen={isMobilePopupOpen} onClick={closeMobilePopup} />
             <MobilePopup isOpen={isMobilePopupOpen}>
               <PopupHandle />
