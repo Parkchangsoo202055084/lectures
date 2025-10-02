@@ -91,7 +91,7 @@ export const ASIDE_CONTENT = {
             "Sotong Hall",
             "Learning & Practice Hall",
             "Hanul Hall (Gym)",
-            "Seongbin Hall (Dormitory)",
+            "Seongbin (Dormitory)",
             "Saeromteo",
             "Haeoreum Hall",
             "Jangjunha Unification Hall",
@@ -104,7 +104,7 @@ export const ASIDE_CONTENT = {
             { label: "Cafeteria", children: ["Student Cafeteria (18)", "Student Cafeteria (Emmanuel)"] },
             {
               label: "Cafe",
-              children: ["Cafeing (18)", "Cafeing (Kyungsam)", "Veratis", "Stay"],
+              children: ["Cafeing (18)", "Cafeing (Kyungsam Hall)", "Veratis", "Stay"],
             },
             { label: "Convenience Store", children: ["CU", "emart24", "Seven-Eleven"] },
             {

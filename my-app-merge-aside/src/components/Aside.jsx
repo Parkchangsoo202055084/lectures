@@ -1,6 +1,9 @@
 // FILE: src/components/Aside.jsx
+
 import { useState, useEffect } from "react";
 import styleA from "./Aside.module.css";
+// 🚨 추가: 번역 및 쿼리 체크 함수 import
+import { translateToKorean, isEnglishQuery } from "../utils/englishKoreanTranslator"; 
 
 const fallbackTabs = [
     { id: "map", label: "캠퍼스 지도", icon: "🗺️" }, 
@@ -14,13 +17,14 @@ const Aside = ({
     activeTab,
     setActiveTab,
     onSelectBuilding,
-    onSelectFacility,
+    onSelectFacility, // <-- 카테고리와 항목 이름을 모두 받습니다.
     onSelectItem,
     texts,
     onToggleSidebar,
     isSidebarOpen
 }) => {
-    const content = texts.aside[activeTab];
+    // texts 구조를 확신할 수 없을 때 안전하게 접근
+    const content = texts?.aside?.[activeTab]; 
     const [openSections, setOpenSections] = useState({});
     const [openNodes, setOpenNodes] = useState({});
     const [isMobile, setIsMobile] = useState(false);
@@ -56,35 +60,70 @@ const Aside = ({
     const isObjectNode = (item) =>
         item && typeof item === "object" && !Array.isArray(item);
 
-    // helper: 현재 탭이 지도 관련인지 판단
-    const isMapContent = () => {
-        if (activeTab === "map") return true;
-        const title = content?.title || "";
-        return /건물|Buildings/i.test(title);
-    };
 
     // 트리 렌더링
     const renderTreeItems = (items, path = [], sectionTitle = null) => {
+        // 필수 데이터가 없을 경우 렌더링 중지
+        if (!texts || !texts.aside.map || !content || !items) return null; 
+        
+        // '건물 목록' 섹션 타이틀을 시설과 구분하기 위해 가져옴
+        const buildingSectionTitle = texts.aside.map.collapsible?.[0]?.title;
+        
         return (
             <ul className={styleA.asideList} style={{ paddingLeft: path.length ? 12 : 0 }}>
                 {items.map((item, idx) => {
-                    // 문자열 leaf 노드
+                    // 문자열 leaf 노드 (최종 클릭 가능한 항목)
                     if (!isObjectNode(item)) {
                         const key = [...path, String(item)].join("/");
                         const handleClick = () => {
-                            const topCategory =
-                                path[0] || sectionTitle || content?.title || activeTab;
+                            
+                            let itemName = String(item);
+                            
+                            // 1. 영문 쿼리인 경우 한국어로 번역 적용
+                            if (isEnglishQuery(itemName)) {
+                                itemName = translateToKorean(itemName);
+                            }
+                            
+                            // ⭐️ 2. 최종 정규화: 괄호 주변의 공백을 강제 제거하여 BUILDINGS 키와 일치
+                            const normalizedName = itemName.replace(/\s*([()])\s*/g, '$1').trim();
+                            
+                            
+                            // topCategory는 "건물 목록" 또는 "편의시설" 같은 최상위 섹션 타이틀이 됩니다.
+                            const topCategory = sectionTitle 
+                                ? sectionTitle // collapsible 섹션의 아이템일 경우, sectionTitle이 카테고리입니다.
+                                : path[0] || content?.title || activeTab; // 일반 리스트나 트리 형태일 경우
 
                             // ⭐️ 탭별 분기
-                            if (activeTab === "bus") {
-                                // 🚌 버스는 지도와 무관 → BusInfo 페이지로
-                                if (onSelectItem) onSelectItem(item);
-                            } else if (isMapContent() && onSelectBuilding) {
-                                onSelectBuilding(String(item));
-                            } else if (onSelectFacility) {
-                                onSelectFacility(topCategory, String(item));
+                            if (activeTab === "map") {
+                                // 맵 탭에서만 건물/시설 분기 처리
+                                
+                                // '건물 목록' 섹션의 항목인 경우
+                                if (topCategory === buildingSectionTitle) {
+                                    if (onSelectBuilding) onSelectBuilding(normalizedName);
+                                } 
+                                // '편의시설' 섹션의 하위 항목인 경우
+                                else if (onSelectFacility) {
+                                    // path 배열의 마지막 요소를 사용하되, 없으면 TopCategory를 사용합니다.
+                                    let facilityCategory = path[path.length - 1] || topCategory;
+                                    
+                                    // 카테고리도 영문이면 번역 적용
+                                    if (isEnglishQuery(facilityCategory)) {
+                                        facilityCategory = translateToKorean(facilityCategory);
+                                    }
+                                    
+                                    // 카테고리도 괄호 공백 정규화
+                                    facilityCategory = facilityCategory.replace(/\s*([()])\s*/g, '$1').trim();
+                                    
+                                    if (facilityCategory) {
+                                        onSelectFacility(facilityCategory, normalizedName);
+                                    }
+                                }
+                            } else if (activeTab === "bus") {
+                                // 🚌 버스는 지도와 무관 
+                                if (onSelectItem) onSelectItem(normalizedName);
                             } else if (onSelectItem) {
-                                onSelectItem(item);
+                                // 기타 탭의 단순 리스트 항목
+                                if (onSelectItem) onSelectItem(normalizedName);
                             }
 
                             if (isMobile && onToggleSidebar) {
@@ -105,23 +144,75 @@ const Aside = ({
                         );
                     }
 
-                    // object node
+                    // object node (카테고리 또는 서브 메뉴)
                     const nodeKey = [...path, item.label].join("/");
                     const hasChildren = Array.isArray(item.children) && item.children.length > 0;
                     const opened = !!openNodes[nodeKey];
 
                     const handleLabelClick = () => {
                         if (hasChildren) {
+                            // 자식이 있으면 노드 토글만 수행
                             toggleNode(nodeKey);
+                            
+                            // ⭐️ 추가: 자식이 있는 카테고리(예: "식당", "카페")를 클릭했을 때
+                            // 해당 카테고리의 모든 지점 마커를 표시하기 위해 name=null로 호출
+                            if (activeTab === "map" && onSelectFacility) {
+                                let categoryName = item.label;
+                                
+                                // 영문 쿼리 번역
+                                if (isEnglishQuery(categoryName)) {
+                                    categoryName = translateToKorean(categoryName);
+                                }
+                                
+                                // 괄호 공백 정규화
+                                const normalizedCategory = categoryName.replace(/\s*([()])\s*/g, '$1').trim();
+                                
+                                // name을 null로 전달하여 카테고리 전체 마커 표시
+                                onSelectFacility(normalizedCategory, null);
+                            }
                         } else {
-                            if (activeTab === "bus") {
-                                if (onSelectItem) onSelectItem(item.label);
-                            } else if (isMapContent() && onSelectBuilding) {
-                                onSelectBuilding(item.label);
-                            } else if (onSelectFacility) {
-                                onSelectFacility(item.label, item.label);
+                            // 자식이 없는 카테고리(예: '은행/ATM')를 클릭한 경우, 이 자체가 핀 대상
+                            let currentItemLabel = item.label;
+                            
+                            // 1. 영문 쿼리인 경우 한국어로 번역 적용
+                            if (isEnglishQuery(currentItemLabel)) {
+                                currentItemLabel = translateToKorean(currentItemLabel);
+                            }
+                            
+                            // ⭐️ 2. 최종 정규화: 괄호 주변의 공백을 강제 제거
+                            const normalizedName = currentItemLabel.replace(/\s*([()])\s*/g, '$1').trim();
+                            
+                            
+                            const topCategory = sectionTitle 
+                                ? sectionTitle 
+                                : path[0] || content?.title || activeTab;
+
+                            // ⭐️ 탭별 분기
+                            if (activeTab === "map") {
+                                // 맵 탭에서만 건물/시설 분기 처리
+                                
+                                // '건물 목록' 섹션의 항목인 경우: buildingSectionTitle과 현재 카테고리(topCategory) 비교
+                                if (topCategory === buildingSectionTitle) {
+                                    if (onSelectBuilding) onSelectBuilding(normalizedName);
+                                } 
+                                // '편의시설' 섹션의 항목인 경우 (자식이 없지만 핀 대상)
+                                else if (onSelectFacility) {
+                                    let facilityCategory = path[path.length - 1] || topCategory;
+                                    
+                                    // 카테고리도 영문이면 번역 적용
+                                    if (isEnglishQuery(facilityCategory)) {
+                                        facilityCategory = translateToKorean(facilityCategory);
+                                    }
+                                    
+                                    // 카테고리도 괄호 공백 정규화
+                                    facilityCategory = facilityCategory.replace(/\s*([()])\s*/g, '$1').trim();
+                                    
+                                    onSelectFacility(facilityCategory, normalizedName);
+                                }
+                            } else if (activeTab === "bus") {
+                                if (onSelectItem) onSelectItem(normalizedName);
                             } else if (onSelectItem) {
-                                onSelectItem(item.label);
+                                if (onSelectItem) onSelectItem(normalizedName);
                             }
 
                             if (isMobile && onToggleSidebar) {
@@ -149,7 +240,7 @@ const Aside = ({
                                     {renderTreeItems(
                                         item.children,
                                         [...path, item.label],
-                                        sectionTitle
+                                        sectionTitle 
                                     )}
                                 </div>
                             )}
@@ -185,6 +276,7 @@ const Aside = ({
                             {opened && (
                                 <>
                                     {section.items &&
+                                        // 📌 section.title을 sectionTitle 인수로 전달
                                         renderTreeItems(section.items, [], section.title)}
                                 </>
                             )}
@@ -192,16 +284,29 @@ const Aside = ({
                     );
                 })
             ) : (
+                // 트리 구조가 아닌 단순 리스트 처리
                 <ul className={styleA.asideList}>
                     {content.items.map((item, idx) => (
                         <li key={idx}>
                             <button
                                 className={styleA.itemButton}
                                 onClick={() => {
+                                    
+                                    let itemName = String(item);
+                                    
+                                    // 1. 영문 쿼리인 경우 한국어로 번역 적용
+                                    if (isEnglishQuery(itemName)) {
+                                        itemName = translateToKorean(itemName);
+                                    }
+                                    
+                                    // ⭐️ 2. 최종 정규화
+                                    const normalizedName = itemName.replace(/\s*([()])\s*/g, '$1').trim(); 
+                                    
+                                    
                                     if (activeTab === "bus") {
-                                        if (onSelectItem) onSelectItem(item);
+                                        if (onSelectItem) onSelectItem(normalizedName);
                                     } else if (onSelectItem) {
-                                        onSelectItem(item);
+                                        onSelectItem(normalizedName);
                                     }
                                     if (isMobile && onToggleSidebar) {
                                         onToggleSidebar();
