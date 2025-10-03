@@ -144,18 +144,6 @@ const FreePostItem = styled(PostItem)`
   background: #e9f5ff;
 `;
 
-const UserStatusDisplay = styled.div`
-  position: fixed;
-  top: 20px;
-  left: 20px;
-  background: ${props => props.isAdmin ? '#28a745' : '#17a2b8'};
-  color: white;
-  padding: 10px 15px;
-  border-radius: 8px;
-  font-weight: bold;
-  z-index: 1000;
-`;
-
 export default function QA() {
   const [activeTab, setActiveTab] = useState('qa');
   const [posts, setPosts] = useState([]);
