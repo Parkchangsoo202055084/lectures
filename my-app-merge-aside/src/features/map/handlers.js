@@ -25,24 +25,39 @@ export function makeHandleSelectBuilding({
   infoRef,
   ready = true,
   onDetail,
+  lang = "ko",
 }) {
   return (name) => {
     if (!ready) return;
     const map = mapRef.current;
     if (!map) return;
+    // support either string name or { lookup: koreanKey, display: displayName }
+    let lookupName = name;
+    let displayName = name;
+    if (name && typeof name === "object") {
+      lookupName = name.lookup || name.korean || name.key || lookupName;
+      displayName = name.display || name.title || lookupName;
+      if (name.lang) {
+        lang = name.lang;
+      }
+    }
 
-    const coord = BUILDINGS[name];
+    const coord = BUILDINGS[lookupName];
+    // fallback: if coord not found and displayName looks like english, try translating
     if (!coord) {
-      console.warn(`좌표 없음: ${name}`);
+      console.warn(`좌표 없음: ${lookupName}, 시도: ${displayName}`);
       return;
     }
 
+    // use centralized helper that returns normalized data with lang support
+    const normalizedData = getBuildingDetail(lookupName, lang);
+
     const detail = {
       type: "building",
-      title: name,
+      title: displayName || lookupName,
       subtitle: "건물",
       coords: coord,
-      data: getBuildingDetail(name),
+      data: normalizedData,
     };
 
     clearMarkerAndInfo(markerRef, infoRef);
@@ -52,7 +67,7 @@ export function makeHandleSelectBuilding({
       infoRef,
       lat: coord.lat,
       lng: coord.lng,
-      label: name,
+      label: detail.title,
       // 마커 클릭 시 상세 패널 갱신
       onClick: () => onDetail && onDetail(detail),
     });
@@ -80,6 +95,7 @@ export function makeHandleSelectFacility({
   infoRef,
   ready = true,
   onDetail,
+  lang = "ko",
 }) {
   return (category, name) => {
     if (!ready) return;
@@ -147,11 +163,17 @@ export function makeHandleSelectFacility({
     }
 
     const label = `${category} - ${name}`;
+
+    // Try to read language-specific description if present in the facilities data
+    const raw = FACILITIES?.[category]?.[name] || {};
+    const description = raw?.[lang]?.description || raw?.description || null;
+
     const detail = {
       type: "facility",
       title: label,
       subtitle: category,
       coords: coord,
+      data: description ? { description } : undefined,
     };
 
     clearMarkerAndInfo(markerRef, infoRef);

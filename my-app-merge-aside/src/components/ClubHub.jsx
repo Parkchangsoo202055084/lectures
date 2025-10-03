@@ -533,7 +533,7 @@ KILLER_WHALES`}
 
 const CATEGORIES = Object.keys(CLUBS_BY_CATEGORY);
 
-export default function ClubHub() {
+export default function ClubHub({ texts = {} }) {
   const [activeCategory, setActiveCategory] = useState(CATEGORIES[0]);
   const [selectedClub, setSelectedClub] = useState(null);
 
@@ -549,6 +549,8 @@ export default function ClubHub() {
   }
 
   const bgUrl = CATEGORY_IMAGES[activeCategory];
+
+  const clubTexts = texts?.clubDetails || {};
 
   return (
     <div style={{ position: "relative", minHeight: "72vh" }}>
@@ -569,7 +571,7 @@ export default function ClubHub() {
 
       {/* 내용 */}
       <div style={{ position: "relative", zIndex: 1 }}>
-        <h2 style={{ margin: "6px 0 16px" }}>중앙 동아리</h2>
+  <h2 style={{ margin: "6px 0 16px" }}>{clubTexts.centralClub?.title || "중앙 동아리"}</h2>
 
         {/* 분과 탭 */}
         <div
@@ -582,6 +584,8 @@ export default function ClubHub() {
         >
           {CATEGORIES.map((cat) => {
             const isActive = activeCategory === cat;
+            // use language-aware label if available: texts.aside.club... fallback to key
+            const langLabel = texts?.aside?.club?.items?.[CATEGORIES.indexOf(cat)] || cat;
             return (
               <button
                 key={cat}
@@ -596,7 +600,7 @@ export default function ClubHub() {
                   boxShadow: isActive ? "0 2px 6px rgba(0,0,0,0.12)" : "none",
                 }}
               >
-                {cat} 분과
+                {langLabel} {clubTexts.categorySuffix || "분과"}
               </button>
             );
           })}

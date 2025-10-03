@@ -21,7 +21,8 @@ const Aside = ({
     onSelectItem,
     texts,
     onToggleSidebar,
-    isSidebarOpen
+    isSidebarOpen,
+    lang = 'ko',
 }) => {
     // texts 구조를 확신할 수 없을 때 안전하게 접근
     const content = texts?.aside?.[activeTab]; 
@@ -99,7 +100,7 @@ const Aside = ({
                                 
                                 // '건물 목록' 섹션의 항목인 경우
                                 if (topCategory === buildingSectionTitle) {
-                                    if (onSelectBuilding) onSelectBuilding(normalizedName);
+                                    if (onSelectBuilding) onSelectBuilding({ lookup: normalizedName, display: String(item), lang });
                                 } 
                                 // '편의시설' 섹션의 하위 항목인 경우
                                 else if (onSelectFacility) {
@@ -193,21 +194,13 @@ const Aside = ({
                                 
                                 // '건물 목록' 섹션의 항목인 경우: buildingSectionTitle과 현재 카테고리(topCategory) 비교
                                 if (topCategory === buildingSectionTitle) {
-                                    if (onSelectBuilding) onSelectBuilding(normalizedName);
+                                    if (onSelectBuilding) onSelectBuilding({ lookup: normalizedName, display: item.label, lang });
                                 } 
                                 // '편의시설' 섹션의 항목인 경우 (자식이 없지만 핀 대상)
                                 else if (onSelectFacility) {
-                                    let facilityCategory = path[path.length - 1] || topCategory;
-                                    
-                                    // 카테고리도 영문이면 번역 적용
-                                    if (isEnglishQuery(facilityCategory)) {
-                                        facilityCategory = translateToKorean(facilityCategory);
-                                    }
-                                    
-                                    // 카테고리도 괄호 공백 정규화
-                                    facilityCategory = facilityCategory.replace(/\s*([()])\s*/g, '$1').trim();
-                                    
-                                    onSelectFacility(facilityCategory, normalizedName);
+                                    // 자식이 없는 항목은 자기 자신이 카테고리이자 항목명
+                                    // 예: "은행/ATM" 클릭 시 -> category: "은행/ATM", item: "은행/ATM"
+                                    onSelectFacility(normalizedName, normalizedName);
                                 }
                             } else if (activeTab === "bus") {
                                 if (onSelectItem) onSelectItem(normalizedName);
@@ -287,35 +280,28 @@ const Aside = ({
                 // 트리 구조가 아닌 단순 리스트 처리
                 <ul className={styleA.asideList}>
                     {content.items.map((item, idx) => (
-                        <li key={idx}>
-                            <button
-                                className={styleA.itemButton}
-                                onClick={() => {
-                                    
-                                    let itemName = String(item);
-                                    
-                                    // 1. 영문 쿼리인 경우 한국어로 번역 적용
-                                    if (isEnglishQuery(itemName)) {
-                                        itemName = translateToKorean(itemName);
-                                    }
-                                    
-                                    // ⭐️ 2. 최종 정규화
-                                    const normalizedName = itemName.replace(/\s*([()])\s*/g, '$1').trim(); 
-                                    
-                                    
-                                    if (activeTab === "bus") {
-                                        if (onSelectItem) onSelectItem(normalizedName);
-                                    } else if (onSelectItem) {
-                                        onSelectItem(normalizedName);
-                                    }
-                                    if (isMobile && onToggleSidebar) {
-                                        onToggleSidebar();
-                                    }
-                                }}
-                            >
-                                {item}
-                            </button>
-                        </li>
+                                <li key={idx}>
+                                    <button
+                                        className={styleA.itemButton}
+                                        onClick={() => {
+                                            const displayName = String(item);
+
+                                            // For map-related simple lists we may need to translate to Korean for lookup,
+                                            // but for other tabs we should send the visible label (displayName) so App matches texts.
+                                            if (activeTab === "bus") {
+                                                // bus items are identifiers / names — keep as-is
+                                                if (onSelectItem) onSelectItem(displayName);
+                                            } else if (onSelectItem) {
+                                                onSelectItem(displayName);
+                                            }
+                                            if (isMobile && onToggleSidebar) {
+                                                onToggleSidebar();
+                                            }
+                                        }}
+                                    >
+                                        {item}
+                                    </button>
+                                </li>
                     ))}
                 </ul>
             )}
@@ -361,7 +347,6 @@ const Aside = ({
                         <span style={{ fontSize: "1.5em" }}>
                             {isSidebarOpen ? "✕" : "☰"}
                         </span>
-                        <span style={{ fontSize: "0.7em", marginTop: "2px" }}>메뉴</span>
                     </button>
 
                     {currentTabs.map((tab) => (
@@ -373,9 +358,7 @@ const Aside = ({
                             onClick={() => setActiveTab(tab.id)}
                         >
                             <span style={{ fontSize: "1.2em" }}>{tab.icon}</span>
-                            <span style={{ fontSize: "0.7em", marginTop: "2px" }}>
-                                {tab.label}
-                            </span>
+                            <span style={{ fontSize: "0.7em" }}>{tab.label}</span>
                         </button>
                     ))}
                 </nav>

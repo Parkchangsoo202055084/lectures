@@ -6,7 +6,7 @@
 const TRANSLATION_DICT = {
     // --- 건물 고유명사 및 구성 요소 (이미지 및 ASIDE_CONTENT 기반) ---
     janggong: '장공',
-    pilheon: '필헌',
+    pilheon: '필현',
     manwoo: '만우',
     shalom: '살롬',
     emmanuel: '임마누엘',
@@ -54,7 +54,7 @@ const TRANSLATION_DICT = {
     lot: '', // Parking Lot에서 'Lot' 제거 (주차장 자체에 이미 포함)
     bank: '은행', // Bank/ATM
     atm: 'ATM',
-    post: '우체국', // Post Office
+    post: '우체', // Post Office
     office: '국', // Post Office에서 'Office'를 '국'으로 (우체국)
     hospital: '병원', // Hospital/Pharmacy
     pharmacy: '약국',

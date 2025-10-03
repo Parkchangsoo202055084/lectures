@@ -78,6 +78,8 @@
   border-radius: 8px; 
   padding: 6px 10px; 
   cursor: pointer; 
+  display: flex;
+  align-items: center;
 }
 
 .itemButton:hover { 
@@ -132,6 +134,7 @@
   transition: color 0.2s;
   padding: 8px;
   flex: 1;
+  line-height: 1; 
 }
 
 .navButton:active {
@@ -177,8 +180,9 @@
 .mobile-menu-popup {
   position: fixed;
   top: 60px;
-  bottom: 60px;
+  bottom: 0;
   left: 0;
+  right: 0;
   width: 240px;
   background-color: #ffffff;
   box-shadow: 2px 0 12px rgba(0, 0, 0, 0.15);
@@ -203,6 +207,7 @@
   padding: 16px;
   overflow-y: auto;
   height: 100%;
+  line-height: 1.5; 
 }
 
 /* 메뉴 내부 스타일 조정 */

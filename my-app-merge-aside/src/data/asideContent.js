@@ -31,7 +31,7 @@ export const ASIDE_CONTENT = {
             { label: "식당", children: ["학식(18관)", "학식(임마누엘관)"] },
             {
               label: "카페",
-              children: ["카페ing(18)", "카페ing(경삼관)", "베라티스", "스테이"],
+              children: ["카페ing(18관)", "카페ing(경삼관)", "베라티스", "스테이"],
             },
             { label: "편의점", children: ["CU", "emart24", "Seven-Eleven"] },
             {
@@ -101,10 +101,10 @@ export const ASIDE_CONTENT = {
         {
           title: "Facilities",
           items: [
-            { label: "Cafeteria", children: ["Student Cafeteria (18)", "Student Cafeteria (Emmanuel)"] },
+            { label: "Cafeteria", children: ["Student Cafeteria (18 Hall)", "Student Cafeteria (Emmanuel Hall)"] },
             {
               label: "Cafe",
-              children: ["Cafeing (18)", "Cafeing (Kyungsam Hall)", "Veratis", "Stay"],
+              children: ["Cafeing (18 Hall)", "Cafeing (Kyungsam Hall)", "Veratis", "Stay"],
             },
             { label: "Convenience Store", children: ["CU", "emart24", "Seven-Eleven"] },
             {
@@ -140,15 +140,7 @@ export const ASIDE_CONTENT = {
         },
       ],
     },
-    newB: {
-      title: "Current Student Info",
-      collapsible: [
-        {
-          title: "Current Student Info",
-          items: ["Academic Calendar", "OT Guide"],
-        },
-      ],
-    },
+    newB: { title: "Current Student Info", items: ["Academic Calendar", "OT Guide"]},
     club: { title: "Clubs", items: ["Central Clubs", "How to Join"] },
     assist: {
       title: "Student Support",

@@ -2,7 +2,7 @@
 
 import React from "react";
 
-export default function MapDetailPanel({ detail }) {
+export default function MapDetailPanel({ detail, texts = {}, lang = 'ko' }) {
   if (!detail) return null;
 
   const { type, title, subtitle, data, coords } = detail;
@@ -37,23 +37,35 @@ export default function MapDetailPanel({ detail }) {
       {/* 건물 상세 안내 */}
       {type === "building" && data && (
         <>
-          {data.alias && (
-            <div style={{ marginTop: 8, fontSize: 13, color: "#444" }}>
-              별칭: {data.alias}
-            </div>
-          )}
-          {Array.isArray(data.floors) && data.floors.length > 0 && (
-            <Section title="층별 안내">
-              <ul style={{ margin: 0, paddingInlineStart: 18 }}>
-                {data.floors.map((f) => (
-                  <li key={f.floor} style={{ marginBottom: 4 }}>
-                    <b>{f.floor}</b> :{" "}
-                    {Array.isArray(f.rooms) ? f.rooms.join(", ") : f.rooms}
-                  </li>
-                ))}
-              </ul>
-            </Section>
-          )}
+              {data && (
+                (() => {
+                  const raw = data.raw || {};
+                  const alias = (raw && ((raw[lang] && raw[lang].alias) || data.alias || raw.alias)) || data.alias;
+                  const floors = (raw && ((raw[lang] && raw[lang].floors) || data.floors)) || data.floors;
+
+                  return (
+                    <>
+                      {alias && (
+                        <div style={{ marginTop: 8, fontSize: 13, color: "#444" }}>
+                          {texts.aliasLabel || "별칭:"} {alias}
+                        </div>
+                      )}
+                      {Array.isArray(floors) && floors.length > 0 && (
+                        <Section title={texts.floorsSection || "층별 안내"}>
+                          <ul style={{ margin: 0, paddingInlineStart: 18 }}>
+                            {floors.map((f) => (
+                              <li key={f.floor} style={{ marginBottom: 4 }}>
+                                <b>{f.floor}</b> :{" "}
+                                {Array.isArray(f.rooms) ? f.rooms.join(", ") : f.rooms}
+                              </li>
+                            ))}
+                          </ul>
+                        </Section>
+                      )}
+                    </>
+                  );
+                })()
+              )}
         </>
       )}
 

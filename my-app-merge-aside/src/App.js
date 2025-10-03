@@ -250,8 +250,9 @@ function App() {
         infoRef,
         ready,
         onDetail: setDetail,
+        lang,
       }),
-    [mapRef, markerRef, infoRef, ready]
+    [mapRef, markerRef, infoRef, ready, lang]
   );
 
   const handleSelectFacility = useMemo(
@@ -262,8 +263,9 @@ function App() {
         infoRef,
         ready,
         onDetail: setDetail,
+        lang,
       }),
-    [mapRef, markerRef, infoRef, ready]
+    [mapRef, markerRef, infoRef, ready, lang]
   );
 
   const searchIndexData = useMemo(() => makeSearchIndex(), []);
@@ -335,8 +337,9 @@ function App() {
           "Neutbom Hall": "늦봄관"
         };
         
-        const koreanName = buildingNameMap[hit.name] || hit.name;
-        handleSelectBuilding(koreanName);
+  const koreanName = buildingNameMap[hit.name] || hit.name;
+  // pass both lookup (korean key) and display (original hit.name)
+  handleSelectBuilding({ lookup: koreanName, display: hit.name });
       } else if (hit.type === "facility") {
         console.log('🏪 편의시설 핸들러 호출:', hit.category, hit.item);
         handleSelectFacility(hit.category, hit.item);
@@ -349,6 +352,23 @@ function App() {
     });
 
     window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const normalize = (s) => (s || "").toString().trim().toLowerCase();
+  const getAsideItems = (tab) => {
+    // try multiple possible shapes where items may live
+    const aside = texts[lang]?.aside?.[tab];
+    if (!aside) return [];
+    if (Array.isArray(aside.items)) return aside.items;
+    if (Array.isArray(aside.collapsible)) {
+      // flatten first-level collapsible items
+      const items = [];
+      aside.collapsible.forEach((c) => {
+        if (Array.isArray(c.items)) items.push(...c.items);
+      });
+      if (items.length) return items;
+    }
+    return [];
   };
 
   useEffect(() => {
@@ -380,18 +400,23 @@ function App() {
           onSelectFacility={handleSelectFacility}
           onSelectItem={setSelectedItem}
           texts={texts[lang]}
+          lang={lang}
           isSidebarOpen={isSidebarOpen}
           onToggleSidebar={toggleSidebar}
         />
 
-        <div style={{ padding: "20px", flexGrow: 1 }}>
+        <div style={{ 
+            // 🛠️ 20px 대신 Nav 바 높이를 고려한 80px (60px + 여유분 20px) 정도의 패딩을 줍니다.
+            padding: "80px 20px 20px 20px", 
+            flexGrow: 1, 
+        }}>
           <MapSection active={activeTab === "map"}>
             <MapLayout>
               <MapBox>
                 <MapView id="map" height={600} />
               </MapBox>
               <DetailBox>
-                <MapDetailPanel detail={detail} texts={texts[lang].mapDetails} />
+                <MapDetailPanel detail={detail} texts={texts[lang].mapDetails} lang={lang} />
               </DetailBox>
             </MapLayout>
 
@@ -405,7 +430,7 @@ function App() {
                 <CloseButton onClick={closeMobilePopup}>×</CloseButton>
               </PopupHeader>
               <PopupContent>
-                <MapDetailPanel detail={detail} texts={texts[lang].mapDetails} />
+                <MapDetailPanel detail={detail} texts={texts[lang].mapDetails} lang={lang} />
               </PopupContent>
             </MobilePopup>
           </MapSection>
@@ -416,12 +441,22 @@ function App() {
 
           {activeTab === "newB" && (
             <>
-              {selectedItem === "학사일정" && (
-                <CalendarPage texts={texts[lang].calendarPage} />
-              )}
-              {selectedItem === "OT 안내" && (
-                <OtInfo texts={texts[lang].otInfo} />
-              )}
+              {/* get language-aware labels from aside (supports items OR collapsible shapes) */}
+              {(() => {
+                const newBItems = getAsideItems('newB');
+                // debug
+                console.log('newBItems:', newBItems, 'selectedItem:', selectedItem);
+                return (
+                  <>
+                    {normalize(selectedItem) === normalize(newBItems[0]) && (
+                      <CalendarPage texts={texts[lang].calendarPage} />
+                    )}
+                    {normalize(selectedItem) === normalize(newBItems[1]) && (
+                      <OtInfo texts={texts[lang].otInfo} />
+                    )}
+                  </>
+                );
+              })()}
               {!selectedItem && (
                 <div style={{ padding: 20, color: "#666" }}>
                   {texts[lang].newB.notSelected}
@@ -432,13 +467,15 @@ function App() {
 
           {activeTab === "club" && (
             <>
-              {selectedItem === texts[lang].aside.club.items[0] && (
+              {/* normalize 비교로 언어 차이로 인한 불일치 방지 */}
+              {console.log('club tab selectedItem:', selectedItem, 'labels:', getAsideItems('club'))}
+              {normalize(selectedItem) === normalize(getAsideItems('club')[0]) && (
                 <ClubHub 
-                  texts={texts[lang].clubDetails.centralClub}
+                  texts={texts[lang]}
                   initialClub={selectedClub}
                 />
               )}
-              {selectedItem === texts[lang].aside.club.items[1] && (
+              {normalize(selectedItem) === normalize(getAsideItems('club')[1]) && (
                 <div style={{ padding: 20 }}>
                   <h2>{texts[lang].clubDetails.howToJoin.title}</h2>
                   <p>{texts[lang].clubDetails.howToJoin.body}</p>

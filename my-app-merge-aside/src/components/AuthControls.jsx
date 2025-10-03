@@ -61,6 +61,7 @@ export const AuthControls = ({ texts, onToggleLang, isMobile }) => {
                 {user ? (
                     <>
                         {isMobile ? (
+                            // 모바일에서는 프로필 아이콘만 보여준다 (이메일/이름은 길어짐으로 인해 숨김)
                             <div className={styles["user-icon"]} onClick={handleLogoutClick} aria-label={texts.auth.logout || "로그아웃"}>
                                 {user.photoURL ? 
                                     <img src={user.photoURL} alt="Profile" className={styles["profile-img"]} /> : 
@@ -68,6 +69,7 @@ export const AuthControls = ({ texts, onToggleLang, isMobile }) => {
                                 }
                             </div>
                         ) : (
+                            // 데스크탑/넓은 화면에서는 기존대로 이름 또는 이메일을 표시
                             <>
                                 <div className={styles["user-info"]}>
                                     {user.photoURL && <img src={user.photoURL} alt="Profile" className={styles["profile-img"]} />}
