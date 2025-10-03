@@ -75,7 +75,7 @@ export const texts = {
       },
     },
     clubDetails: {
-      selectPrompt: "좌측에서 항목을 선택하세요. (중앙동아리 / 가입방법)",
+      notSelected: "좌측에서 항목을 선택하세요. (중앙동아리 / 가입방법)",
       howToJoin: {
         title: "동아리 가입 방법",
         body: "동아리 가입을 원하면 매년 3월 초에 진행되는 동아리 박람회에 참여하거나, 각 동아리 SNS를 통해 문의할 수 있습니다. 자세한 일정은 학생지원팀 공지사항을 확인하세요.",
@@ -86,7 +86,7 @@ export const texts = {
       },
     },
     busInfo: {
-      notSelected: "좌측에서 버스 노선을 선택하세요.",
+      notSelected: "좌측에서 항목을 선택하세요.(버스 노선 / 셔틀버스 / 기타 정보)",
       notReady: "해당 항목의 내용이 아직 준비되지 않았습니다.",
       imageAlt: {
         '1550-1': '1550-1 운행 시간표',
@@ -243,7 +243,7 @@ export const texts = {
       },
     },
     clubDetails: {
-      selectPrompt: "Select an item from the left. (Central Clubs / How to Join)",
+      notSelected: "Select an item from the left. (Central Clubs / How to Join)",
       howToJoin: {
         title: "How to Join a Club",
         body: "If you want to join a club, you can attend the club fair held in early March every year or contact each club through their social media. Check the Student Support Team's announcements for detailed schedules.",
@@ -254,7 +254,7 @@ export const texts = {
       },
     },
     busInfo: {
-      notSelected: "Select a bus route from the left.",
+      notSelected: "Select an item from the left. (Bus Routes / Shuttle Bus / Other Info)",
       notReady: "Content for this item is not yet available.",
       imageAlt: {
         '1550-1': '1550-1 Bus Schedule',

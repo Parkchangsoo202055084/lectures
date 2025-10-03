@@ -29,6 +29,7 @@ const Container = styled.div`
 
   @media (max-width: 768px) {
     flex-direction: column;
+    margin-top: 60px; 
   }
 `;
 
@@ -407,7 +408,7 @@ function App() {
 
         <div style={{ 
             // 🛠️ 20px 대신 Nav 바 높이를 고려한 80px (60px + 여유분 20px) 정도의 패딩을 줍니다.
-            padding: "80px 20px 20px 20px", 
+            padding: "20px", 
             flexGrow: 1, 
         }}>
           <MapSection active={activeTab === "map"}>
@@ -436,7 +437,16 @@ function App() {
           </MapSection>
 
           {activeTab === "bus" && (
-            <BusInfo selected={selectedItem} texts={texts[lang]} />
+            <>
+              {getAsideItems('bus').some(item => normalize(selectedItem) === normalize(item)) && (
+                <BusInfo selected={selectedItem} texts={texts[lang]} />
+              )}
+              {!selectedItem && (
+                <div style={{ padding: 20, color: "#666" }}>
+                  {texts[lang].busInfo.notSelected}
+                </div>
+              )}
+            </>
           )}
 
           {activeTab === "newB" && (
@@ -483,15 +493,26 @@ function App() {
               )}
               {!selectedItem && (
                 <div style={{ padding: 20, color: "#666" }}>
-                  {texts[lang].clubDetails.selectPrompt}
+                  {texts[lang].clubDetails.notSelected}
                 </div>
               )}
             </>
           )}
 
           {activeTab === "assist" && (
-            <AssistDetail selected={selectedItem} texts={texts[lang]} />
+            <>
+              {console.log('assist tab selectedItem:', selectedItem, 'labels:', getAsideItems('assist'))}
+              {getAsideItems('assist').some(item => normalize(selectedItem) === normalize(item)) && (
+                <AssistDetail selected={selectedItem} texts={texts[lang]} />
+              )}
+              {!selectedItem && (
+                <div style={{ padding: 20, color: "#666" }}>
+                  {texts[lang].assistDetails.notSelected}
+                </div>
+              )}
+            </>
           )}
+
         </div>
       </Container>
     </>

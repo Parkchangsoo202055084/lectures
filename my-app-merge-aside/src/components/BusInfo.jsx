@@ -27,16 +27,8 @@ const InfoImage = styled.img`
 `;
 
 const BusInfo = ({ selected, texts }) => {
-  if (!selected) {
-    return (
-      <BusInfoContainer>
-        <p style={{ color: '#666' }}>{texts.busInfo.notSelected}</p>
-      </BusInfoContainer>
-    );
-  }
-
   const busData = texts.busInfo[selected];
-  
+
   if (!busData) {
     return (
       <BusInfoContainer>
@@ -69,5 +61,6 @@ const BusInfo = ({ selected, texts }) => {
     </BusInfoContainer>
   );
 };
+
 
 export default BusInfo;
