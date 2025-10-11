@@ -85,7 +85,7 @@ const MobileClubPopup = ({ club, onClose }) => {
                     background: "white",
                     borderRadius: "20px 20px 0 0",
                     boxShadow: "0 -4px 20px rgba(0, 0, 0, 0.15)",
-                    height: "42vh",
+                    height: "35vh",
                     zIndex: 1001,
                     display: "flex",
                     flexDirection: "column",
