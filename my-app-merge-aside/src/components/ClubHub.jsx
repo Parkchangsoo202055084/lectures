@@ -24,7 +24,7 @@ const ClubPopup = ({ club }) => {
 
     const listWidth = 460; 
     const gap = 24; 
-    const fixedTop = 96;
+    const fixedTop = 94;
 
     return (
         <div
