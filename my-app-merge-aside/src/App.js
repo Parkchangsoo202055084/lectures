@@ -93,7 +93,8 @@ const MobilePopup = styled.div`
     display: ${(props) => (props.isOpen ? "flex" : "none")};
     flex-direction: column;
     position: fixed;
-    bottom: 0;
+    bottom: 60px;
+    height: 35vh;
     left: 0;
     right: 0;
     background: white;
