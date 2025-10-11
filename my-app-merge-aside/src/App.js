@@ -338,9 +338,8 @@ function App() {
           "Neutbom Hall": "늦봄관"
         };
         
-  const koreanName = buildingNameMap[hit.name] || hit.name;
-  // pass both lookup (korean key) and display (original hit.name)
-  handleSelectBuilding({ lookup: koreanName, display: hit.name });
+        const koreanName = buildingNameMap[hit.name] || hit.name;
+        handleSelectBuilding({ lookup: koreanName, display: hit.name });
       } else if (hit.type === "facility") {
         console.log('🏪 편의시설 핸들러 호출:', hit.category, hit.item);
         handleSelectFacility(hit.category, hit.item);
@@ -357,12 +356,10 @@ function App() {
 
   const normalize = (s) => (s || "").toString().trim().toLowerCase();
   const getAsideItems = (tab) => {
-    // try multiple possible shapes where items may live
     const aside = texts[lang]?.aside?.[tab];
     if (!aside) return [];
     if (Array.isArray(aside.items)) return aside.items;
     if (Array.isArray(aside.collapsible)) {
-      // flatten first-level collapsible items
       const items = [];
       aside.collapsible.forEach((c) => {
         if (Array.isArray(c.items)) items.push(...c.items);
@@ -407,7 +404,6 @@ function App() {
         />
 
         <div style={{ 
-            // 🛠️ 20px 대신 Nav 바 높이를 고려한 80px (60px + 여유분 20px) 정도의 패딩을 줍니다.
             padding: "20px", 
             flexGrow: 1, 
         }}>
@@ -451,10 +447,8 @@ function App() {
 
           {activeTab === "newB" && (
             <>
-              {/* get language-aware labels from aside (supports items OR collapsible shapes) */}
               {(() => {
                 const newBItems = getAsideItems('newB');
-                // debug
                 console.log('newBItems:', newBItems, 'selectedItem:', selectedItem);
                 return (
                   <>
@@ -477,11 +471,11 @@ function App() {
 
           {activeTab === "club" && (
             <>
-              {/* normalize 비교로 언어 차이로 인한 불일치 방지 */}
               {console.log('club tab selectedItem:', selectedItem, 'labels:', getAsideItems('club'))}
               {normalize(selectedItem) === normalize(getAsideItems('club')[0]) && (
                 <ClubHub 
                   texts={texts[lang]}
+                  lang={lang}
                   initialClub={selectedClub}
                 />
               )}
