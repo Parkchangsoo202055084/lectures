@@ -1,4 +1,4 @@
-// FILE: src/components/ClubDetail.jsx
+// FILE: src/data/ClubDetail.jsx
 
 export function extLink(url, text) {
   return (

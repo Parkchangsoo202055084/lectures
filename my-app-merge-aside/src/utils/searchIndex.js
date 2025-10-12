@@ -4,6 +4,7 @@ import { texts } from "./texts";
 import { BUILDING_DETAILS } from "../data/buildingDetails";
 import { levenshteinDistance } from "./levenshtein";
 import { CLUBS_BY_CATEGORY } from "../data/clubData";
+import eventsData from "../data/eventsData";
 
 // 문자열 정규화 - 편의시설은 괄호 유지
 export const norm = (s = "") =>
@@ -37,7 +38,8 @@ export function makeSearchIndex() {
   const buildingIndex = new Map();
   const facilityIndex = new Map();
   const navigationIndex = new Map();
-  const clubIndex = new Map(); // 동아리 인덱스 추가
+  const clubIndex = new Map();
+  const calendarIndex = new Map(); // 학사일정 인덱스 추가
 
   const handleLangData = (lang) => {
     const asideMap = texts[lang].aside.map;
@@ -149,6 +151,23 @@ export function makeSearchIndex() {
       });
     }
 
+    // 영어 학사일정, OT 안내 추가
+    if (lang === "en") {
+      navigationIndex.set(norm("Academic Calendar"), {
+        type: "navigation",
+        tab: "newB",
+        item: "Academic Calendar",
+        title: "Academic Calendar"
+      });
+
+      navigationIndex.set(norm("OT Guide"), {
+        type: "navigation", 
+        tab: "newB",
+        item: "OT Guide",
+        title: "OT Guide"
+      });
+    }
+
     // 동아리 관련 추가
     if (lang === "ko") {
       // 동아리 카테고리
@@ -186,6 +205,19 @@ export function makeSearchIndex() {
         });
       });
     }
+
+    // 🆕 학사일정 이벤트 인덱싱
+    const langEvents = eventsData[lang] || eventsData.ko;
+    langEvents.forEach((event) => {
+      const eventKey = norm(event.title);
+      calendarIndex.set(eventKey, {
+        type: "calendar",
+        title: event.title,
+        start: event.start,
+        end: event.end,
+        eventType: event.type,
+      });
+    });
   };
 
   // 한국어 먼저 처리하여 한국어 카테고리가 우선되도록
@@ -199,18 +231,20 @@ export function makeSearchIndex() {
   );
   console.log(busRelated);
   console.log('🎭 clubIndex 내용:', Array.from(clubIndex.entries()).slice(0, 10));
+  console.log('📅 calendarIndex 내용:', Array.from(calendarIndex.entries()).slice(0, 10));
 
   return {
     buildingIndex,
     facilityIndex,
     navigationIndex,
     clubIndex,
-    search: (query) => searchIndex({ buildingIndex, facilityIndex, navigationIndex, clubIndex }, query),
+    calendarIndex,
+    search: (query) => searchIndex({ buildingIndex, facilityIndex, navigationIndex, clubIndex, calendarIndex }, query),
   };
 }
 
 // 검색 실행 (hit 반환)
-export function searchIndex({ buildingIndex, facilityIndex, navigationIndex, clubIndex }, query) {
+export function searchIndex({ buildingIndex, facilityIndex, navigationIndex, clubIndex, calendarIndex }, query) {
   const q = norm(query);
   const qBuilding = normBuilding(query);
   
@@ -220,8 +254,8 @@ export function searchIndex({ buildingIndex, facilityIndex, navigationIndex, clu
   
   if (!q && !qBuilding) return null;
 
-  // 1. 완전 일치 검색 - 순서: 동아리 -> 네비게이션 -> 편의시설 -> 건물
-  let hit = clubIndex.get(q) || navigationIndex.get(q) || facilityIndex.get(q) || buildingIndex.get(qBuilding);
+  // 1. 완전 일치 검색 - 순서: 학사일정 -> 동아리 -> 네비게이션 -> 편의시설 -> 건물
+  let hit = calendarIndex.get(q) || clubIndex.get(q) || navigationIndex.get(q) || facilityIndex.get(q) || buildingIndex.get(qBuilding);
   if (hit) {
     console.log('✅ 완전 일치 검색 성공:', hit);
     return hit;
@@ -249,7 +283,16 @@ export function searchIndex({ buildingIndex, facilityIndex, navigationIndex, clu
   console.log(`🎯 검색어 길이: ${queryLength}, 허용 오타: ${maxDistance}`);
 
   // 2. Levenshtein 거리 기반 유사성 검색
-  // 동아리 우선 검색
+  // 학사일정 우선 검색
+  for (const [key, value] of calendarIndex) {
+    const distance = levenshteinDistance(q, key);
+    if (distance <= maxDistance && distance < minDistance) {
+      minDistance = distance;
+      bestHit = value;
+    }
+  }
+
+  // 동아리 검색
   for (const [key, value] of clubIndex) {
     const distance = levenshteinDistance(q, key);
     if (distance <= maxDistance && distance < minDistance) {
@@ -287,6 +330,14 @@ export function searchIndex({ buildingIndex, facilityIndex, navigationIndex, clu
 
   // 3. 부분 일치 검색 (특히 버스 번호 등)
   if (!bestHit || minDistance > 1) { 
+    // 학사일정 부분 일치 검색
+    for (const [key, value] of calendarIndex) {
+      if (key.includes(q) || q.includes(key)) {
+        console.log('🔍 학사일정 부분 일치:', key, '←', q);
+        return value;
+      }
+    }
+
     // 동아리 부분 일치 검색
     for (const [key, value] of clubIndex) {
       if (key.includes(q) || q.includes(key)) {

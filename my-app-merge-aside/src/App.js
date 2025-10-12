@@ -179,6 +179,7 @@ function App() {
   const [detail, setDetail] = useState(null);
   const [selectedItem, setSelectedItem] = useState(null);
   const [selectedClub, setSelectedClub] = useState(null);
+  const [highlightEvent, setHighlightEvent] = useState(null);
   const [lang, setLang] = useState("ko");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobilePopupOpen, setIsMobilePopupOpen] = useState(false);
@@ -289,6 +290,25 @@ function App() {
     console.log('📍 카테고리:', hit.category);
     console.log('📍 아이템:', hit.item);
     console.log('📍 이름:', hit.name);
+    
+    // 🆕 학사일정 검색 처리
+    if (hit.type === "calendar") {
+      console.log('📅 학사일정 검색:', hit.title);
+      setActiveTab("newB");
+      // 언어에 맞는 학사일정 아이템 선택
+      const calendarItem = lang === "ko" ? "학사일정" : "Academic Calendar";
+      setSelectedItem(calendarItem);
+
+       // 🔧 항상 새로운 객체를 생성하여 useEffect가 트리거되도록 함
+      setHighlightEvent({ 
+        ...hit,
+        timestamp: Date.now() // 고유값 추가로 매번 새로운 객체로 인식
+      });
+      
+      setIsSidebarOpen(false);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
     
     if (hit.type === "club") {
       console.log('🎭 동아리 검색:', hit.name, '분과:', hit.category);
@@ -451,12 +471,19 @@ function App() {
               {(() => {
                 const newBItems = getAsideItems('newB');
                 console.log('newBItems:', newBItems, 'selectedItem:', selectedItem);
+                const normalizedSelected = normalize(selectedItem);
+                const normalizedFirst = normalize(newBItems[0]);
+                const normalizedSecond = normalize(newBItems[1]);
+                
                 return (
                   <>
-                    {normalize(selectedItem) === normalize(newBItems[0]) && (
-                      <CalendarPage texts={texts[lang].calendarPage} />
+                    {normalizedSelected === normalizedFirst && (
+                      <CalendarPage texts={texts[lang].calendarPage} 
+                      lang={lang} 
+                      highlightEvent={highlightEvent}
+                      />
                     )}
-                    {normalize(selectedItem) === normalize(newBItems[1]) && (
+                    {normalizedSelected === normalizedSecond && (
                       <OtInfo texts={texts[lang].otInfo} />
                     )}
                   </>

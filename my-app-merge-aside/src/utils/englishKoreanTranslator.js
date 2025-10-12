@@ -167,6 +167,112 @@ const TRANSLATION_DICT = {
     numbers: '번호',
     community: '커뮤니티',
     CLUB_TRANSLATIONS, // 동아리 관련 번역 추가
+
+    // --- 학사일정 관련 추가 ---
+    // 학기 관련
+    semester: '학기',
+    fall: '2학기',
+    'fall semester': '2학기',
+    spring: '1학기',
+    'spring semester': '1학기',
+    summer: '여름',
+    winter: '겨울',
+    session: '계절학기',
+    'winter session': '겨울계절학기',
+    'summer session': '여름계절학기',
+    starts: '개강',
+    'semester starts': '개강',
+    
+    // 수강 관련
+    course: '수강',
+    registration: '신청',
+    'course registration': '수강신청',
+    'pre-registration': '예비수강신청',
+    change: '변경',
+    'course change': '수강신청변경',
+    withdrawal: '취소',
+    'course withdrawal': '수강신청취소',
+    drop: '취소',
+    
+    // 시험 관련
+    exam: '고사',
+    midterm: '중간',
+    'midterm exam': '중간고사',
+    final: '기말',
+    'final exam': '기말고사',
+    evaluation: '평가',
+    'course evaluation': '강의평가',
+    'midterm course evaluation': '중간강의평가',
+    'final course evaluation': '기말강의평가',
+    
+    // 성적 관련
+    grade: '성적',
+    entry: '입력',
+    'grade entry': '성적입력',
+    inquiry: '조회',
+    'grade inquiry': '성적조회',
+    appeal: '이의신청',
+    
+    // 학적 관련
+    reinstatement: '복학',
+    'leave of absence': '휴학',
+    'leave': '휴학',
+    absence: '휴학',
+    transfer: '전과',
+    'major transfer': '전과',
+    major: '전공',
+    'double major': '복수전공',
+    'major application': '전공신청',
+    readmission: '재입학',
+    
+    // 졸업 관련
+    graduation: '졸업',
+    'graduation day': '졸업일',
+    'graduation ceremony': '학위수여식',
+    ceremony: '식',
+    commencement: '학위수여',
+    degree: '학위',
+    
+    // 등록 관련
+    tuition: '등록',
+    payment: '납부',
+    'tuition payment': '등록',
+    'payment period': '등록기간',
+    enrollment: '등록',
+    
+    // 신입생 관련
+    freshman: '신입생',
+    orientation: '오리엔테이션',
+    admission: '입학',
+    'new student': '신입생',
+    'transfer student': '편입생',
+    
+    // 공휴일 관련
+    holiday: '휴일',
+    'liberation day': '광복절',
+    'national foundation day': '개천절',
+    'hangeul day': '한글날',
+    chuseok: '추석',
+    'lunar new year': '설날',
+    christmas: '성탄절',
+    'new year': '신정',
+    "new year's day": '신정',
+    'substitute holiday': '대체공휴일',
+    
+    // 기타
+    period: '기간',
+    deadline: '마감',
+    application: '신청',
+    completed: '완료',
+    substitute: '대체',
+    current: '재학',
+    returning: '복학',
+    students: '학생',
+    
+    // 날짜 표현
+    '1/4': '1/4',
+    quarter: '분의일',
+    completed: '선',
 };
 
 function escapeRegExp(string) {

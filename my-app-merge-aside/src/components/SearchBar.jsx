@@ -68,6 +68,24 @@ export const SearchBar = ({ onSearch, texts, searchIndex, isMobile }) => {
             }
         }
 
+        // 🆕 학사일정 이벤트
+        if (searchIndex.calendarIndex) {
+            for (const [key, value] of searchIndex.calendarIndex) {
+                if (suggestions.length >= maxSuggestions) break;
+                const uniqueKey = `calendar-${value.title}`;
+                if ((key.includes(normalizedQuery) || normalizedQuery.includes(key)) && !seen.has(uniqueKey)) {
+                    suggestions.push({ 
+                        text: value.title, 
+                        type: "calendar", 
+                        icon: "📅", 
+                        source: "index",
+                        eventType: value.eventType
+                    });
+                    seen.add(uniqueKey);
+                }
+            }
+        }
+
         // 편의시설
         for (const [key, value] of searchIndex.facilityIndex) {
             if (suggestions.length >= maxSuggestions) break;
@@ -309,6 +327,7 @@ export const SearchBar = ({ onSearch, texts, searchIndex, isMobile }) => {
                                             {suggestion.type === "building" ? "건물" : 
                                             suggestion.type === "facility" ? "편의시설" :
                                             suggestion.type === "club" ? `동아리 (${suggestion.category})` : 
+                                            suggestion.type === "calendar" ? "학사일정" :
                                             suggestion.type === "navigation" ? 
                                                 (suggestion.category === "bus" ? "버스 정보" : 
                                                 suggestion.category === "assist" ? "학생지원" : 
