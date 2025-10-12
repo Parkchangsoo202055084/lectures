@@ -265,14 +265,8 @@ const TRANSLATION_DICT = {
     application: '신청',
     completed: '완료',
     substitute: '대체',
-    current: '재학',
     returning: '복학',
     students: '학생',
-    
-    // 날짜 표현
-    '1/4': '1/4',
-    quarter: '분의일',
-    completed: '선',
 };
 
 function escapeRegExp(string) {

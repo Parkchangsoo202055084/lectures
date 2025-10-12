@@ -1,10 +1,11 @@
 // FILE: src/components/CalendarPage.jsx
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import { Calendar, dateFnsLocalizer } from "react-big-calendar";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import { format, parse, startOfWeek, getDay } from "date-fns";
 import ko from "date-fns/locale/ko";
 import enUS from "date-fns/locale/en-US";
+import { FiMenu } from "react-icons/fi";
 
 // 학사일정 데이터 가져오기
 import eventsData from "../data/eventsData";
@@ -25,7 +26,7 @@ const CalendarPage = ({ texts, lang = "ko", highlightEvent = null }) => {
   }, [lang, locale]);
 
   // 언어에 맞는 이벤트 데이터 선택 및 Date 객체로 변환
-  const formattedEvents = useMemo(() => {
+  const rawEvents = useMemo(() => {
     const langEvents = eventsData[lang] || eventsData.ko;
     return langEvents.map((event) => ({
       ...event,
@@ -34,14 +35,46 @@ const CalendarPage = ({ texts, lang = "ko", highlightEvent = null }) => {
     }));
   }, [lang]);
 
-  const [events, setEvents] = useState(formattedEvents);
+  const [view, setView] = useState("month"); 
+  const [eventFilter, setEventFilter] = useState({
+    school: true, 
+    holiday: true,
+    exam: true,
+  });
+
+  const filteredEvents = useMemo(() => {
+    return rawEvents.filter((event) => {
+      if (event.type === 'school' && eventFilter.school) return true;
+      if (event.type === 'holiday' && eventFilter.holiday) return true;
+      if (event.type === 'exam' && eventFilter.exam) return true;
+      return false;
+    });
+  }, [rawEvents, eventFilter]);
+
+  const [events, setEvents] = useState(filteredEvents);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [highlightedEventId, setHighlightedEventId] = useState(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef(null);
+
+  const touchStartX = useRef(0);
+  const isDragging = useRef(false);
+
+  useEffect(() => {
+    setEvents(filteredEvents);
+  }, [filteredEvents]);
 
   // 언어가 변경되면 이벤트 업데이트
   useEffect(() => {
-    setEvents(formattedEvents);
-  }, [formattedEvents]);
+    const handleClickOutside = (e) => {
+      const menuButton = e.target.closest('button[aria-label="Menu Toggle"]');
+      if (menuOpen && menuRef.current && !menuRef.current.contains(e.target) && !menuButton) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [menuOpen]);
 
   // highlightEvent prop이 변경되면 해당 이벤트로 이동
   useEffect(() => {
@@ -51,8 +84,8 @@ const CalendarPage = ({ texts, lang = "ko", highlightEvent = null }) => {
       // 약간의 딜레이를 주어 캘린더가 완전히 렌더링된 후 실행
       setTimeout(() => {
         // 해당 이벤트 찾기
-        const targetEvent = formattedEvents.find(
-          event => event.title === highlightEvent.title
+        const targetEvent = rawEvents.find(
+          (event) => event.title === highlightEvent.title
         );
         
         if (targetEvent) {
@@ -65,189 +98,311 @@ const CalendarPage = ({ texts, lang = "ko", highlightEvent = null }) => {
           setHighlightedEventId(targetEvent.title);
           
           // 3초 후 하이라이트 제거
-          setTimeout(() => {
-            setHighlightedEventId(null);
-          }, 3000);
-        } else {
-          console.log('❌ 이벤트를 찾을 수 없음');
+          setTimeout(() => setHighlightedEventId(null), 3000);
         }
       }, 100); // 100ms 딜레이
     }
-  }, [highlightEvent, formattedEvents]);
+  }, [highlightEvent, rawEvents]);
+
+  const handleFilterChange = (type) => {
+    setEventFilter(prev => ({
+      ...prev,
+      [type]: !prev[type]
+    }));
+  };
+
+  const handleViewChange = (newView) => {
+    setView(newView);
+    setMenuOpen(false); 
+  };
 
   // 이벤트 타입에 따라 스타일을 다르게 적용하는 함수
   const eventPropGetter = (event) => {
-    // 하이라이트된 이벤트는 특별한 스타일 적용
+    let style = {
+      backgroundColor: "#3174ad",
+      color: "white",
+      borderRadius: "4px",
+      border: "none",
+      padding: "2px 5px",
+      margin: "1px 0",
+      fontSize: "12px",
+      minHeight: "20px",
+      lineHeight: "1.3",
+      opacity: 0.95,
+      whiteSpace: "normal",
+      overflow: "hidden",
+    };
+
+    if (event.type === "holiday") {
+      style.backgroundColor = "#ff7f7f";
+    } else if (event.type === "exam") {
+      style.backgroundColor = "#32a852";
+    } else if (event.type === "school") {
+      style.backgroundColor = "#3174ad";
+    }
+
     if (event.title === highlightedEventId) {
-      console.log('🎨 하이라이트 스타일 적용:', event.title);
-      return {
-        className: `${event.type} highlighted-event`,
-        style: {
-          backgroundColor: "#ff9800", // 주황색으로 강조
-          color: "white",
-          border: "3px solid #f57c00",
-          fontWeight: "bold",
-          borderRadius: "4px",
-          boxShadow: "0 0 15px rgba(255, 152, 0, 0.8)",
-          animation: "pulse 1s ease-in-out infinite",
-        }
+      style = {
+        ...style,
+        backgroundColor: "#ff9800",
+        border: "3px solid #f57c00",
+        fontWeight: "bold",
+        boxShadow: "0 0 15px rgba(255, 152, 0, 0.8)",
+        animation: "pulse 1s ease-in-out infinite",
+        opacity: 1,
       };
     }
-    
-    let newStyle = {
-      backgroundColor: "#3174ad", // 기본 배경색
-      color: "white",
-      borderRadius: "0px",
-      border: "none",
-    };
-    
-    if (event.type === "holiday") {
-      newStyle.backgroundColor = "#ff7f7f"; // 공휴일은 붉은색
-    } else if (event.type === "exam") {
-      newStyle.backgroundColor = "#32a852"; // 시험 기간은 녹색
+    return { style };
+  };
+  
+  const navigateCalendar = (swipeDistance) => {
+    const threshold = 50;
+    if (Math.abs(swipeDistance) > threshold) {
+      if (swipeDistance > 0) {
+        setSelectedDate((prev) => {
+          const newDate = new Date(prev);
+          newDate.setMonth(newDate.getMonth() + 1);
+          return newDate;
+        });
+      } else {
+        setSelectedDate((prev) => {
+          const newDate = new Date(prev);
+          newDate.setMonth(newDate.getMonth() - 1);
+          return newDate;
+        });
+      }
     }
-    
-    return {
-      className: event.type,
-      style: newStyle,
-    };
+  };
+
+  const handleTouchStart = (e) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+  const handleTouchEnd = (e) => {
+    const swipeDistance = touchStartX.current - e.changedTouches[0].clientX;
+    navigateCalendar(swipeDistance);
+  };
+  const handleMouseDown = (e) => {
+    isDragging.current = true;
+    touchStartX.current = e.clientX;
+  };
+  const handleMouseUp = (e) => {
+    if (isDragging.current) navigateCalendar(touchStartX.current - e.clientX);
+    isDragging.current = false;
+  };
+  const handleMouseMove = (e) => {
+    if (isDragging.current) e.preventDefault();
   };
 
   return (
-    <div style={{ 
-      height: "80vh", 
-      padding: "20px",
-      // 모바일 대응
-      minHeight: "500px"
-    }}>
-      <h2 style={{ marginBottom: 16 }}>{texts.title}</h2>
-      <div style={{
-        height: "calc(100% - 50px)",
-        // 모바일에서 캘린더가 잘 보이도록 조정
-        minHeight: "450px"
-      }}>
+    <div 
+      style={{ 
+        height: "85vh",
+        padding: "20px", 
+        minHeight: "550px",
+        position: "relative",
+        overflow: "hidden" 
+      }}
+    >
+      
+      <h2 className="pc-only-title" style={{ margin: "0 0 16px 0", flex: 1 }}>{texts.title}</h2>
+
+      <div className="mobile-only-header" style={{ display: "flex", alignItems: "center", marginBottom: 16 }}>
+        <button
+          onClick={() => setMenuOpen(!menuOpen)}
+          aria-label="Menu Toggle" 
+          style={{
+            fontSize: "24px",
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            marginRight: "10px",
+            zIndex: 3000, 
+          }}
+        >
+          <FiMenu />
+        </button>
+        <h2 style={{ margin: 0, flex: 1 }}>{texts.title}</h2>
+        <button
+          className="mobile-today"
+          onClick={() => setSelectedDate(new Date())}
+        >
+          오늘
+        </button>
+      </div>
+
+      <div
+        ref={menuRef}
+        className={`mobile-menu ${menuOpen ? "open" : ""}`}
+      >
+        <div className="menu-section">
+          <h4>보기 전환</h4>
+          <button 
+            onClick={() => handleViewChange('month')}
+            style={{ fontWeight: view === 'month' ? 'bold' : 'normal', background: view === 'month' ? '#eee' : '#f8f8f8' }}
+          >
+            월
+          </button>
+          <button 
+            onClick={() => handleViewChange('week')}
+            style={{ fontWeight: view === 'week' ? 'bold' : 'normal', background: view === 'week' ? '#eee' : '#f8f8f8' }}
+          >
+            주
+          </button>
+          <button 
+            onClick={() => handleViewChange('day')}
+            style={{ fontWeight: view === 'day' ? 'bold' : 'normal', background: view === 'day' ? '#eee' : '#f8f8f8' }}
+          >
+            일
+          </button>
+          <button 
+            onClick={() => handleViewChange('agenda')}
+            style={{ fontWeight: view === 'agenda' ? 'bold' : 'normal', background: view === 'agenda' ? '#eee' : '#f8f8f8' }}
+          >
+            일정
+          </button>
+        </div>
+
+        <div className="menu-section">
+          <h4>타입 토글</h4>
+          <label>
+            <input 
+              type="checkbox" 
+              checked={eventFilter.school} 
+              onChange={() => handleFilterChange('school')}
+            /> 
+            학사일정
+          </label>
+          <label>
+            <input 
+              type="checkbox" 
+              checked={eventFilter.holiday} 
+              onChange={() => handleFilterChange('holiday')}
+            /> 
+            공휴일
+          </label>
+          <label>
+            <input 
+              type="checkbox" 
+              checked={eventFilter.exam} 
+              onChange={() => handleFilterChange('exam')}
+            /> 
+            시험기간
+          </label>
+        </div>
+      </div>
+
+      <div 
+        style={{ height: "calc(100% - 50px)" }}
+        onTouchStart={handleTouchStart} 
+        onTouchEnd={handleTouchEnd}
+        onMouseDown={handleMouseDown}
+        onMouseUp={handleMouseUp}
+        onMouseMove={handleMouseMove}
+      >
         <Calendar
           localizer={localizer}
           events={events}
           startAccessor="start"
           endAccessor="end"
+          date={selectedDate}
+          view={view} 
+          onNavigate={(date) => setSelectedDate(date)}
+          onView={(newView) => setView(newView)}
           style={{ height: "100%", borderRadius: 8 }}
           culture={lang}
           messages={texts.toolbar}
           views={["month", "week", "day", "agenda"]}
           eventPropGetter={eventPropGetter}
+          selectable={true} 
         />
       </div>
-      
-      {/* 모바일 전용 스타일 */}
+
       <style>{`
         @keyframes pulse {
-          0%, 100% {
-            transform: scale(1);
-            box-shadow: 0 0 15px rgba(255, 152, 0, 0.8);
-          }
-          50% {
-            transform: scale(1.05);
-            box-shadow: 0 0 25px rgba(255, 152, 0, 1);
-          }
+          0%, 100% { transform: scale(1); box-shadow: 0 0 15px rgba(255, 152, 0, 0.8); }
+          50% { transform: scale(1.05); box-shadow: 0 0 25px rgba(255, 152, 0, 1); }
         }
-        
-        .highlighted-event {
-          z-index: 100 !important;
+
+        .pc-only-title {
+            display: none; 
         }
-        
-        @media (max-width: 768px) {
-          .rbc-calendar {
-            font-size: 12px;
-          }
+
+        .mobile-menu {
+          position: fixed;
+          top: 70px; 
+          left: 0; 
+          width: 240px;
+          height: auto; 
+          max-height: calc(100% - 70px); 
+          background: white;
+          box-shadow: 4px 0 12px rgba(0,0,0,0.2);
+          padding: 20px;
+          transition: transform 0.3s ease-out;
+          z-index: 4000;
           
-          .rbc-toolbar {
-            flex-direction: column;
-            gap: 10px;
-            margin-bottom: 15px;
-          }
-          
-          .rbc-toolbar-label {
-            font-size: 16px;
-            font-weight: bold;
-          }
-          
-          .rbc-btn-group {
+          transform: translateX(-100%);
+          pointer-events: none;
+          overflow-y: auto; 
+        }
+        .mobile-menu.open { 
+            transform: translateX(0); 
+            pointer-events: auto;
+        }
+
+        .menu-section { margin-bottom: 20px; }
+        .menu-section h4 { margin-bottom: 8px; font-size: 14px; }
+        .menu-section label {
             display: flex;
-            gap: 5px;
-          }
-          
-          .rbc-btn-group button {
-            padding: 5px 10px;
-            font-size: 12px;
-          }
-          
-          .rbc-header {
-            padding: 5px 2px;
-            font-size: 11px;
-          }
-          
-          .rbc-date-cell {
-            padding: 2px;
-          }
-          
-          .rbc-event {
-            padding: 2px 4px;
-            font-size: 10px;
-          }
-          
-          .rbc-event-content {
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-          }
-          
-          /* 주간/일간 뷰 최적화 */
-          .rbc-time-slot {
-            min-height: 30px;
-          }
-          
-          .rbc-time-header-content {
-            font-size: 11px;
-          }
-          
-          /* 아젠다 뷰 최적화 */
-          .rbc-agenda-view table {
-            font-size: 12px;
-          }
-          
-          .rbc-agenda-date-cell,
-          .rbc-agenda-time-cell {
-            padding: 8px 5px;
-          }
-          
-          .rbc-agenda-event-cell {
-            padding: 8px 5px;
-          }
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .menu-section input[type="checkbox"] {
+            margin-right: 10px;
+        }
+        .menu-section button {
+          display: block;
+          width: 100%;
+          margin-bottom: 5px;
+          padding: 8px;
+          border: 1px solid #ddd;
+          background: #f8f8f8;
+          border-radius: 6px;
+          cursor: pointer;
+          text-align: left;
         }
         
-        @media (max-width: 480px) {
-          .rbc-calendar {
-            font-size: 10px;
+        @media (min-width: 769px) {
+            .pc-only-title { 
+                display: block; 
+            }
+            .mobile-only-header { 
+                display: none !important;
+            }
+            .mobile-menu { 
+                display: none !important; 
+            }
+        }
+
+        @media (max-width: 768px) {
+          .pc-only-title { 
+            display: none !important; 
           }
+          .rbc-toolbar { display: none !important; }
           
-          .rbc-toolbar-label {
-            font-size: 14px;
+          .mobile-only-header { 
+              display: flex !important;
           }
-          
-          .rbc-btn-group button {
-            padding: 4px 8px;
-            font-size: 11px;
-          }
-          
-          .rbc-header {
-            font-size: 10px;
-            padding: 3px 1px;
-          }
-          
-          .rbc-event {
-            font-size: 9px;
-            padding: 1px 3px;
+
+          .mobile-today {
+            background: #3174ad;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 6px 10px;
+            font-size: 13px;
+            cursor: pointer;
           }
         }
       `}</style>
