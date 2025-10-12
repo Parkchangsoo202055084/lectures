@@ -1,4 +1,3 @@
-// FILE: src/components/CalendarPage.jsx
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { Calendar, dateFnsLocalizer } from "react-big-calendar";
 import "react-big-calendar/lib/css/react-big-calendar.css";
@@ -7,25 +6,24 @@ import ko from "date-fns/locale/ko";
 import enUS from "date-fns/locale/en-US";
 import { FiMenu } from "react-icons/fi";
 
-// 학사일정 데이터 가져오기
 import eventsData from "../data/eventsData";
 
-// CalendarPage 컴포넌트
 const CalendarPage = ({ texts, lang = "ko", highlightEvent = null }) => {
-  // 언어에 따른 로케일 설정
   const locale = lang === "ko" ? ko : enUS;
-  
   const localizer = useMemo(() => {
     return dateFnsLocalizer({
       format,
       parse,
-      startOfWeek: () => startOfWeek(new Date(), { weekStartsOn: 1 }), // 월요일 시작
+      startOfWeek: () => startOfWeek(new Date(), { weekStartsOn: 1 }),
       getDay,
       locales: { [lang]: locale },
     });
   }, [lang, locale]);
 
-  // 언어에 맞는 이벤트 데이터 선택 및 Date 객체로 변환
+  const calendarMessages = useMemo(() => {
+    return texts?.calendarPage?.toolbar || {};
+  }, [texts]);
+
   const rawEvents = useMemo(() => {
     const langEvents = eventsData[lang] || eventsData.ko;
     return langEvents.map((event) => ({
@@ -64,8 +62,23 @@ const CalendarPage = ({ texts, lang = "ko", highlightEvent = null }) => {
     setEvents(filteredEvents);
   }, [filteredEvents]);
 
-  // 언어가 변경되면 이벤트 업데이트
   useEffect(() => {
+    const originalBodyStyle = {
+      overflow: document.body.style.overflow,
+      position: document.body.style.position,
+      width: document.body.style.width,
+    };
+
+    if (menuOpen) {
+      document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed'; 
+      document.body.style.width = '100%'; 
+    } else {
+      document.body.style.overflow = originalBodyStyle.overflow;
+      document.body.style.position = originalBodyStyle.position;
+      document.body.style.width = originalBodyStyle.width;
+    }
+    
     const handleClickOutside = (e) => {
       const menuButton = e.target.closest('button[aria-label="Menu Toggle"]');
       if (menuOpen && menuRef.current && !menuRef.current.contains(e.target) && !menuButton) {
@@ -73,34 +86,27 @@ const CalendarPage = ({ texts, lang = "ko", highlightEvent = null }) => {
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+        document.body.style.overflow = originalBodyStyle.overflow;
+        document.body.style.position = originalBodyStyle.position;
+        document.body.style.width = originalBodyStyle.width;
+    }
   }, [menuOpen]);
 
-  // highlightEvent prop이 변경되면 해당 이벤트로 이동
   useEffect(() => {
     if (highlightEvent && highlightEvent.title && highlightEvent.start) {
-      console.log('🎯 하이라이트할 이벤트:', highlightEvent);
-      
-      // 약간의 딜레이를 주어 캘린더가 완전히 렌더링된 후 실행
       setTimeout(() => {
-        // 해당 이벤트 찾기
         const targetEvent = rawEvents.find(
           (event) => event.title === highlightEvent.title
         );
-        
         if (targetEvent) {
-          console.log('✅ 이벤트 찾음:', targetEvent);
-          // 해당 날짜로 이동
           const eventDate = new Date(targetEvent.start);
-          console.log('📅 이동할 날짜:', eventDate);
           setSelectedDate(eventDate);
-          // 이벤트 하이라이트
           setHighlightedEventId(targetEvent.title);
-          
-          // 3초 후 하이라이트 제거
           setTimeout(() => setHighlightedEventId(null), 3000);
         }
-      }, 100); // 100ms 딜레이
+      }, 100);
     }
   }, [highlightEvent, rawEvents]);
 
@@ -116,7 +122,6 @@ const CalendarPage = ({ texts, lang = "ko", highlightEvent = null }) => {
     setMenuOpen(false); 
   };
 
-  // 이벤트 타입에 따라 스타일을 다르게 적용하는 함수
   const eventPropGetter = (event) => {
     let style = {
       backgroundColor: "#3174ad",
@@ -160,13 +165,13 @@ const CalendarPage = ({ texts, lang = "ko", highlightEvent = null }) => {
     if (Math.abs(swipeDistance) > threshold) {
       if (swipeDistance > 0) {
         setSelectedDate((prev) => {
-          const newDate = new Date(prev);
+          const newDate = new Date(prev); // 'new Date' -> 'newDate'로 수정
           newDate.setMonth(newDate.getMonth() + 1);
           return newDate;
         });
       } else {
         setSelectedDate((prev) => {
-          const newDate = new Date(prev);
+          const newDate = new Date(prev); // 'new Date' -> 'newDate'로 수정
           newDate.setMonth(newDate.getMonth() - 1);
           return newDate;
         });
@@ -195,16 +200,16 @@ const CalendarPage = ({ texts, lang = "ko", highlightEvent = null }) => {
 
   return (
     <div 
+      className="calendar-main-container" 
       style={{ 
-        height: "85vh",
         padding: "20px", 
-        minHeight: "550px",
+        minHeight: "400px", 
         position: "relative",
         overflow: "hidden" 
       }}
     >
       
-      <h2 className="pc-only-title" style={{ margin: "0 0 16px 0", flex: 1 }}>{texts.title}</h2>
+      <h2 className="pc-only-title" style={{ margin: "0 0 16px 0", flex: 1 }}>{texts?.calendarPage?.title}</h2>
 
       <div className="mobile-only-header" style={{ display: "flex", alignItems: "center", marginBottom: 16 }}>
         <button
@@ -221,12 +226,12 @@ const CalendarPage = ({ texts, lang = "ko", highlightEvent = null }) => {
         >
           <FiMenu />
         </button>
-        <h2 style={{ margin: 0, flex: 1 }}>{texts.title}</h2>
+        <h2 style={{ margin: 0, flex: 1 }}>{texts?.calendarPage?.title}</h2>
         <button
           className="mobile-today"
           onClick={() => setSelectedDate(new Date())}
         >
-          오늘
+          {calendarMessages.today || (lang === 'ko' ? '오늘' : 'Today')}
         </button>
       </div>
 
@@ -240,25 +245,25 @@ const CalendarPage = ({ texts, lang = "ko", highlightEvent = null }) => {
             onClick={() => handleViewChange('month')}
             style={{ fontWeight: view === 'month' ? 'bold' : 'normal', background: view === 'month' ? '#eee' : '#f8f8f8' }}
           >
-            월
+            {calendarMessages.month || (lang === 'ko' ? '월' : 'Month')}
           </button>
           <button 
             onClick={() => handleViewChange('week')}
             style={{ fontWeight: view === 'week' ? 'bold' : 'normal', background: view === 'week' ? '#eee' : '#f8f8f8' }}
           >
-            주
+            {calendarMessages.week || (lang === 'ko' ? '주' : 'Week')}
           </button>
           <button 
             onClick={() => handleViewChange('day')}
             style={{ fontWeight: view === 'day' ? 'bold' : 'normal', background: view === 'day' ? '#eee' : '#f8f8f8' }}
           >
-            일
+            {calendarMessages.day || (lang === 'ko' ? '일' : 'Day')}
           </button>
           <button 
             onClick={() => handleViewChange('agenda')}
             style={{ fontWeight: view === 'agenda' ? 'bold' : 'normal', background: view === 'agenda' ? '#eee' : '#f8f8f8' }}
           >
-            일정
+            {calendarMessages.agenda || (lang === 'ko' ? '일정' : 'Agenda')}
           </button>
         </div>
 
@@ -292,7 +297,7 @@ const CalendarPage = ({ texts, lang = "ko", highlightEvent = null }) => {
       </div>
 
       <div 
-        style={{ height: "calc(100% - 50px)" }}
+        style={{ height: "100%" }} 
         onTouchStart={handleTouchStart} 
         onTouchEnd={handleTouchEnd}
         onMouseDown={handleMouseDown}
@@ -310,7 +315,7 @@ const CalendarPage = ({ texts, lang = "ko", highlightEvent = null }) => {
           onView={(newView) => setView(newView)}
           style={{ height: "100%", borderRadius: 8 }}
           culture={lang}
-          messages={texts.toolbar}
+          messages={calendarMessages}
           views={["month", "week", "day", "agenda"]}
           eventPropGetter={eventPropGetter}
           selectable={true} 
@@ -321,6 +326,41 @@ const CalendarPage = ({ texts, lang = "ko", highlightEvent = null }) => {
         @keyframes pulse {
           0%, 100% { transform: scale(1); box-shadow: 0 0 15px rgba(255, 152, 0, 0.8); }
           50% { transform: scale(1.05); box-shadow: 0 0 25px rgba(255, 152, 0, 1); }
+        }
+
+        .calendar-main-container {
+            height: calc(100vh - 110px); 
+        }
+
+        @media (max-width: 768px) {
+            .calendar-main-container {
+                height: calc(100vh - 160px); 
+            }
+          
+            .pc-only-title { 
+              display: none !important; 
+            }
+            .rbc-toolbar { display: none !important; }
+            
+            .mobile-only-header { 
+                display: flex !important;
+            }
+
+            .mobile-today {
+              background: #3174ad;
+              color: white;
+              border: none;
+              border-radius: 6px;
+              padding: 6px 10px;
+              font-size: 13px;
+              cursor: pointer;
+            }
+        }
+        
+        .rbc-event-content {
+            white-space: nowrap; 
+            overflow: hidden; 
+            text-overflow: ellipsis; 
         }
 
         .pc-only-title {
@@ -338,7 +378,7 @@ const CalendarPage = ({ texts, lang = "ko", highlightEvent = null }) => {
           box-shadow: 4px 0 12px rgba(0,0,0,0.2);
           padding: 20px;
           transition: transform 0.3s ease-out;
-          z-index: 4000;
+          z-index: 50; 
           
           transform: translateX(-100%);
           pointer-events: none;
@@ -383,27 +423,6 @@ const CalendarPage = ({ texts, lang = "ko", highlightEvent = null }) => {
             .mobile-menu { 
                 display: none !important; 
             }
-        }
-
-        @media (max-width: 768px) {
-          .pc-only-title { 
-            display: none !important; 
-          }
-          .rbc-toolbar { display: none !important; }
-          
-          .mobile-only-header { 
-              display: flex !important;
-          }
-
-          .mobile-today {
-            background: #3174ad;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            padding: 6px 10px;
-            font-size: 13px;
-            cursor: pointer;
-          }
         }
       `}</style>
     </div>
