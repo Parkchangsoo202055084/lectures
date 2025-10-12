@@ -1,3 +1,5 @@
+// src/components/CalendarPage.jsx 
+
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { Calendar, dateFnsLocalizer } from "react-big-calendar";
 import "react-big-calendar/lib/css/react-big-calendar.css";
@@ -21,7 +23,11 @@ const CalendarPage = ({ texts, lang = "ko", highlightEvent = null }) => {
   }, [lang, locale]);
 
   const calendarMessages = useMemo(() => {
-    return texts?.calendarPage?.toolbar || {};
+    return texts?.toolbar || {};
+  }, [texts]);
+  
+  const pageTexts = useMemo(() => {
+    return texts || {};
   }, [texts]);
 
   const rawEvents = useMemo(() => {
@@ -165,13 +171,13 @@ const CalendarPage = ({ texts, lang = "ko", highlightEvent = null }) => {
     if (Math.abs(swipeDistance) > threshold) {
       if (swipeDistance > 0) {
         setSelectedDate((prev) => {
-          const newDate = new Date(prev); // 'new Date' -> 'newDate'로 수정
+          const newDate = new Date(prev); 
           newDate.setMonth(newDate.getMonth() + 1);
           return newDate;
         });
       } else {
         setSelectedDate((prev) => {
-          const newDate = new Date(prev); // 'new Date' -> 'newDate'로 수정
+          const newDate = new Date(prev); 
           newDate.setMonth(newDate.getMonth() - 1);
           return newDate;
         });
@@ -209,7 +215,7 @@ const CalendarPage = ({ texts, lang = "ko", highlightEvent = null }) => {
       }}
     >
       
-      <h2 className="pc-only-title" style={{ margin: "0 0 16px 0", flex: 1 }}>{texts?.calendarPage?.title}</h2>
+      <h2 className="pc-only-title" style={{ margin: "0 0 16px 0", flex: 1 }}>{pageTexts.title}</h2>
 
       <div className="mobile-only-header" style={{ display: "flex", alignItems: "center", marginBottom: 16 }}>
         <button
@@ -221,17 +227,28 @@ const CalendarPage = ({ texts, lang = "ko", highlightEvent = null }) => {
             border: "none",
             cursor: "pointer",
             marginRight: "10px",
-            zIndex: 3000, 
+            zIndex: 1,
+            flexShrink: 0,
           }}
         >
           <FiMenu />
         </button>
-        <h2 style={{ margin: 0, flex: 1 }}>{texts?.calendarPage?.title}</h2>
+        <h2 style={{ 
+          margin: 0, 
+          flex: 1,
+          fontSize: "18px",
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          whiteSpace: "nowrap",
+        }}>{pageTexts.title}</h2>
         <button
           className="mobile-today"
           onClick={() => setSelectedDate(new Date())}
+          style={{
+            flexShrink: 0,
+          }}
         >
-          {calendarMessages.today || (lang === 'ko' ? '오늘' : 'Today')}
+          {calendarMessages.today}
         </button>
       </div>
 
@@ -240,42 +257,42 @@ const CalendarPage = ({ texts, lang = "ko", highlightEvent = null }) => {
         className={`mobile-menu ${menuOpen ? "open" : ""}`}
       >
         <div className="menu-section">
-          <h4>보기 전환</h4>
+          <h4>{pageTexts.viewSwitch}</h4>
           <button 
             onClick={() => handleViewChange('month')}
             style={{ fontWeight: view === 'month' ? 'bold' : 'normal', background: view === 'month' ? '#eee' : '#f8f8f8' }}
           >
-            {calendarMessages.month || (lang === 'ko' ? '월' : 'Month')}
+            {calendarMessages.month}
           </button>
           <button 
             onClick={() => handleViewChange('week')}
             style={{ fontWeight: view === 'week' ? 'bold' : 'normal', background: view === 'week' ? '#eee' : '#f8f8f8' }}
           >
-            {calendarMessages.week || (lang === 'ko' ? '주' : 'Week')}
+            {calendarMessages.week}
           </button>
           <button 
             onClick={() => handleViewChange('day')}
             style={{ fontWeight: view === 'day' ? 'bold' : 'normal', background: view === 'day' ? '#eee' : '#f8f8f8' }}
           >
-            {calendarMessages.day || (lang === 'ko' ? '일' : 'Day')}
+            {calendarMessages.day}
           </button>
           <button 
             onClick={() => handleViewChange('agenda')}
             style={{ fontWeight: view === 'agenda' ? 'bold' : 'normal', background: view === 'agenda' ? '#eee' : '#f8f8f8' }}
           >
-            {calendarMessages.agenda || (lang === 'ko' ? '일정' : 'Agenda')}
+            {calendarMessages.agenda}
           </button>
         </div>
 
         <div className="menu-section">
-          <h4>타입 토글</h4>
+          <h4>{pageTexts.typeToggle}</h4>
           <label>
             <input 
               type="checkbox" 
               checked={eventFilter.school} 
               onChange={() => handleFilterChange('school')}
             /> 
-            학사일정
+            {pageTexts.filterSchool}
           </label>
           <label>
             <input 
@@ -283,7 +300,7 @@ const CalendarPage = ({ texts, lang = "ko", highlightEvent = null }) => {
               checked={eventFilter.holiday} 
               onChange={() => handleFilterChange('holiday')}
             /> 
-            공휴일
+            {pageTexts.filterHoliday}
           </label>
           <label>
             <input 
@@ -291,7 +308,7 @@ const CalendarPage = ({ texts, lang = "ko", highlightEvent = null }) => {
               checked={eventFilter.exam} 
               onChange={() => handleFilterChange('exam')}
             /> 
-            시험기간
+            {pageTexts.filterExam}
           </label>
         </div>
       </div>
@@ -351,9 +368,10 @@ const CalendarPage = ({ texts, lang = "ko", highlightEvent = null }) => {
               color: white;
               border: none;
               border-radius: 6px;
-              padding: 6px 10px;
-              font-size: 13px;
+              padding: 6px 8px;
+              font-size: 12px;
               cursor: pointer;
+              white-space: nowrap;
             }
         }
         
@@ -378,7 +396,7 @@ const CalendarPage = ({ texts, lang = "ko", highlightEvent = null }) => {
           box-shadow: 4px 0 12px rgba(0,0,0,0.2);
           padding: 20px;
           transition: transform 0.3s ease-out;
-          z-index: 50; 
+          z-index: 500; 
           
           transform: translateX(-100%);
           pointer-events: none;
