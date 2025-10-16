@@ -1,6 +1,7 @@
 // FILE: src/components/ClubHub.jsx
+
 import React, { useMemo, useState, useEffect, useRef } from "react";
-import { CLUB_TEXTS } from "../data/ClubDetail";
+import { CLUB_TEXTS } from "../utils/texts/clubTexts";
 
 import 공연 from "../images/공연분과.png";
 import 학술 from "../images/학술분과.png";

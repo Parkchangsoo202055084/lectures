@@ -1,62 +1,56 @@
 // src/utils/texts.js
 
 import { ASIDE_CONTENT } from "../data/asideContent";
-
 // 기존 텍스트 파일들
 import { navTexts } from "./texts/navTexts";
 import { authTexts } from "./texts/authTexts";
 import { mapDetailTexts } from "./texts/mapDetailTexts";
 import { assistTexts } from "./texts/assistTexts";
-import { clubTexts } from "./texts/clubTexts";
 import { busInfoTexts } from "./texts/busInfoTexts";
 import { newBTexts } from "./texts/newBTexts";
+import { calendarEventTitles } from "./texts/calendarEventTitles"; 
+import { clubTexts } from "./texts/clubTexts";
 
-// 🆕 학사일정 & 동아리 상세 텍스트 추가
-import { calendarEventTitles } from "./texts/calendarEventTitles";
-import { clubDetailTexts } from "./texts/clubDetailTexts";
-
-// 최종 texts 객체 구성
+// ✅ 최종 texts 객체
 export const texts = {
-  ko: {
-    nav: navTexts.ko,
-    auth: authTexts.ko,
-    mapDetails: mapDetailTexts.ko,
-    assistDetails: assistTexts.ko,
-    clubDetails: clubTexts.ko.clubDetails,
-    busInfo: busInfoTexts.ko,
-    
-    // newBTexts는 세 개의 최상위 키를 가지고 있으므로 분리하여 매핑
-    calendarPage: newBTexts.ko.calendarPage,
-    otInfo: newBTexts.ko.otInfo,
-    newB: newBTexts.ko.newB,
-    
-    // 🆕 학사일정 제목
-    calendarEventTitles: calendarEventTitles.ko,
-    
-    // 🆕 동아리 상세 정보
-    clubDetailTexts: clubDetailTexts.ko,
-    
-    // aside는 기존대로 외부 ASIDE_CONTENT에서 가져옴
-    aside: ASIDE_CONTENT.ko,
-  },
-  en: {
-    nav: navTexts.en,
-    auth: authTexts.en,
-    mapDetails: mapDetailTexts.en,
-    assistDetails: assistTexts.en,
-    clubDetails: clubTexts.en.clubDetails,
-    busInfo: busInfoTexts.en,
-    
-    calendarPage: newBTexts.en.calendarPage,
-    otInfo: newBTexts.en.otInfo,
-    newB: newBTexts.en.newB,
-    
-    // 🆕 학사일정 제목
-    calendarEventTitles: calendarEventTitles.en,
-    
-    // 🆕 동아리 상세 정보
-    clubDetailTexts: clubDetailTexts.en,
-    
-    aside: ASIDE_CONTENT.en,
-  },
+  ko: {
+    nav: navTexts.ko,
+    auth: authTexts.ko,
+    mapDetails: mapDetailTexts.ko,
+    assistDetails: assistTexts.ko,
+    busInfo: busInfoTexts.ko,
+
+    club: clubTexts.ko, 
+    clubDetails: clubTexts.ko.clubDetails,
+
+    // 📅 학사/새내기 관련
+    calendarPage: {
+        ...newBTexts.ko.calendarPage, 
+        eventTitles: calendarEventTitles.ko, // 이벤트 제목 통합
+    },
+    otInfo: newBTexts.ko.otInfo,
+    newB: newBTexts.ko.newB,
+
+    aside: ASIDE_CONTENT.ko,
+  },
+
+  en: {
+    nav: navTexts.en,
+    auth: authTexts.en,
+    mapDetails: mapDetailTexts.en,
+    assistDetails: assistTexts.en,
+    busInfo: busInfoTexts.en,
+
+    club: clubTexts.en,
+    clubDetails: clubTexts.en.clubDetails,
+
+    calendarPage: {
+        ...newBTexts.en.calendarPage, 
+        eventTitles: calendarEventTitles.en, // 이벤트 제목 통합
+    },
+    otInfo: newBTexts.en.otInfo,
+    newB: newBTexts.en.newB,
+
+    aside: ASIDE_CONTENT.en,
+  },
 };

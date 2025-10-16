@@ -9,7 +9,6 @@ import enUS from "date-fns/locale/en-US";
 import { FiMenu } from "react-icons/fi";
 
 import eventsData from "../data/eventsData";
-import { calendarEventTitles } from "../utils/texts/calendarEventTitles";
 
 const CalendarPage = ({ texts, lang = "ko", highlightEvent = null }) => {
   const locale = lang === "ko" ? ko : enUS;
@@ -31,14 +30,18 @@ const CalendarPage = ({ texts, lang = "ko", highlightEvent = null }) => {
     return texts || {};
   }, [texts]);
 
+  const eventTitles = useMemo(() => {
+    return texts?.eventTitles || {};
+  }, [texts]);
+
   const rawEvents = useMemo(() => {
-    return eventsData.map((event) => ({
-      ...event,
-      title: calendarEventTitles[lang][event.id],
-      start: new Date(event.start),
-      end: new Date(event.end),
-    }));
-  }, [lang]);
+    return eventsData.map((event) => ({
+      ...event,
+      title: eventTitles[event.id],
+      start: new Date(event.start),
+      end: new Date(event.end),
+    }));
+  }, [eventTitles]);
 
   const [view, setView] = useState("month"); 
   const [eventFilter, setEventFilter] = useState({
@@ -448,4 +451,4 @@ const CalendarPage = ({ texts, lang = "ko", highlightEvent = null }) => {
   );
 };
 
-export default CalendarPage;
+export default CalendarPage;  
