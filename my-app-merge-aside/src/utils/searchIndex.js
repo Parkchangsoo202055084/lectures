@@ -5,6 +5,7 @@ import { BUILDING_DETAILS } from "../data/buildingDetails";
 import { levenshteinDistance } from "./levenshtein";
 import { CLUBS_BY_CATEGORY } from "../data/clubData";
 import eventsData from "../data/eventsData";
+import { calendarEventTitles } from "./texts/calendarEventTitles";
 
 // 문자열 정규화 - 편의시설은 괄호 유지
 export const norm = (s = "") =>
@@ -206,17 +207,19 @@ export function makeSearchIndex() {
       });
     }
 
-    // 🆕 학사일정 이벤트 인덱싱
-    const langEvents = eventsData[lang] || eventsData.ko;
-    langEvents.forEach((event) => {
-      const eventKey = norm(event.title);
-      calendarIndex.set(eventKey, {
-        type: "calendar",
-        title: event.title,
-        start: event.start,
-        end: event.end,
-        eventType: event.type,
-      });
+    // 🆕 학사일정 이벤트 인덱싱 (수정된 부분)
+    eventsData.forEach((event) => {
+      const title = calendarEventTitles[lang][event.id];
+      if (title) {
+        const eventKey = norm(title);
+        calendarIndex.set(eventKey, {
+          type: "calendar",
+          title: title,
+          start: event.start,
+          end: event.end,
+          eventType: event.type,
+        });
+      }
     });
   };
 

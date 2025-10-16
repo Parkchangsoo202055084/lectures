@@ -35,7 +35,7 @@ const Container = styled.div`
 
 const MapSection = styled.div`
   width: 100%;
-  display: ${(props) => (props.active ? "block" : "none")};
+  display: ${(props) => (props.$active ? "block" : "none")};
 
   @media (max-width: 768px) {
     position: fixed;
@@ -90,7 +90,7 @@ const MobilePopup = styled.div`
   display: none;
 
   @media (max-width: 768px) {
-    display: ${(props) => (props.isOpen ? "flex" : "none")};
+    display: ${(props) => (props.$isOpen ? "flex" : "none")};
     flex-direction: column;
     position: fixed;
     bottom: 60px;
@@ -163,7 +163,7 @@ const PopupOverlay = styled.div`
   display: none;
 
   @media (max-width: 768px) {
-    display: ${(props) => (props.isOpen ? "block" : "none")};
+    display: ${(props) => (props.$isOpen ? "block" : "none")};
     position: fixed;
     top: 0;
     left: 0;
@@ -428,7 +428,7 @@ function App() {
             padding: "20px", 
             flexGrow: 1, 
         }}>
-          <MapSection active={activeTab === "map"}>
+          <MapSection $active={activeTab === "map"}>
             <MapLayout>
               <MapBox>
                 <MapView id="map" height={600} />
@@ -438,8 +438,8 @@ function App() {
               </DetailBox>
             </MapLayout>
 
-            <PopupOverlay isOpen={isMobilePopupOpen} onClick={closeMobilePopup} />
-            <MobilePopup isOpen={isMobilePopupOpen}>
+            <PopupOverlay $isOpen={isMobilePopupOpen} onClick={closeMobilePopup} />
+            <MobilePopup $isOpen={isMobilePopupOpen}>
               <PopupHandle />
               <PopupHeader>
                 <h3 style={{ margin: 0, fontSize: "18px" }}>
