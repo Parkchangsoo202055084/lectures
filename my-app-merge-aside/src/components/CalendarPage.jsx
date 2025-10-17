@@ -35,13 +35,13 @@ const CalendarPage = ({ texts, lang = "ko", highlightEvent = null }) => {
   }, [texts]);
 
   const rawEvents = useMemo(() => {
-    return eventsData.map((event) => ({
-      ...event,
-      title: eventTitles[event.id],
-      start: new Date(event.start),
-      end: new Date(event.end),
-    }));
-  }, [eventTitles]);
+    return eventsData.map((event) => ({
+      ...event,
+      title: eventTitles[event.id],
+      start: new Date(event.start),
+      end: new Date(event.end),
+    }));
+  }, [eventTitles]);
 
   const [view, setView] = useState("month"); 
   const [eventFilter, setEventFilter] = useState({
@@ -63,10 +63,37 @@ const CalendarPage = ({ texts, lang = "ko", highlightEvent = null }) => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [highlightedEventId, setHighlightedEventId] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [calendarHeight, setCalendarHeight] = useState(600);
   const menuRef = useRef(null);
 
   const touchStartX = useRef(0);
   const isDragging = useRef(false);
+
+  // 🆕 모바일 높이 동적 계산
+  useEffect(() => {
+    const updateHeight = () => {
+      if (window.innerWidth <= 768) {
+        // 🔧 고정된 셀 높이 기반 계산
+        const rowHeight = 70; // 셀 높이
+        const rows = 6; // 최대 6주
+        const headerHeight = 40; // 요일 헤더
+        const calculatedHeight = (rowHeight * rows) + headerHeight;
+        
+        setCalendarHeight(calculatedHeight);
+      } else {
+        setCalendarHeight(600);
+      }
+    };
+
+    updateHeight();
+    window.addEventListener('resize', updateHeight);
+    window.addEventListener('orientationchange', updateHeight);
+    
+    return () => {
+      window.removeEventListener('resize', updateHeight);
+      window.removeEventListener('orientationchange', updateHeight);
+    };
+  }, []);
 
   useEffect(() => {
     setEvents(filteredEvents);
@@ -140,12 +167,14 @@ const CalendarPage = ({ texts, lang = "ko", highlightEvent = null }) => {
       border: "none",
       padding: "2px 5px",
       margin: "1px 0",
-      fontSize: "12px",
-      minHeight: "20px",
-      lineHeight: "1.3",
+      fontSize: "11px", // 🔧 작은 화면용 폰트 크기 축소
+      minHeight: "18px",
+      lineHeight: "1.2",
       opacity: 0.95,
-      whiteSpace: "normal",
+      whiteSpace: "nowrap", // 🔧 텍스트 줄바꿈 방지
       overflow: "hidden",
+      textOverflow: "ellipsis", // 🔧 말줄임표 처리
+      maxWidth: "100%", // 🔧 최대 너비 제한
     };
 
     if (event.type === "holiday") {
@@ -213,9 +242,9 @@ const CalendarPage = ({ texts, lang = "ko", highlightEvent = null }) => {
       className="calendar-main-container" 
       style={{ 
         padding: "20px", 
-        minHeight: "400px", 
         position: "relative",
-        overflow: "hidden" 
+        overflow: "hidden",
+        height: "100%",
       }}
     >
       
@@ -318,7 +347,10 @@ const CalendarPage = ({ texts, lang = "ko", highlightEvent = null }) => {
       </div>
 
       <div 
-        style={{ height: "100%" }} 
+        style={{ 
+          height: "100%",
+          minHeight: `${calendarHeight}px`
+        }} 
         onTouchStart={handleTouchStart} 
         onTouchEnd={handleTouchEnd}
         onMouseDown={handleMouseDown}
@@ -339,7 +371,9 @@ const CalendarPage = ({ texts, lang = "ko", highlightEvent = null }) => {
           messages={calendarMessages}
           views={["month", "week", "day", "agenda"]}
           eventPropGetter={eventPropGetter}
-          selectable={true} 
+          selectable={true}
+          popup={false}
+          showAllEvents={true}
         />
       </div>
 
@@ -350,43 +384,17 @@ const CalendarPage = ({ texts, lang = "ko", highlightEvent = null }) => {
         }
 
         .calendar-main-container {
-            height: calc(100vh - 110px); 
+          height: 100%; 
         }
 
-        @media (max-width: 768px) {
-            .calendar-main-container {
-                height: calc(100vh - 160px); 
-            }
-          
-            .pc-only-title { 
-              display: none !important; 
-            }
-            .rbc-toolbar { display: none !important; }
-            
-            .mobile-only-header { 
-                display: flex !important;
-            }
-
-            .mobile-today {
-              background: #3174ad;
-              color: white;
-              border: none;
-              border-radius: 6px;
-              padding: 6px 8px;
-              font-size: 12px;
-              cursor: pointer;
-              white-space: nowrap;
-            }
-        }
-        
         .rbc-event-content {
-            white-space: nowrap; 
-            overflow: hidden; 
-            text-overflow: ellipsis; 
+          white-space: nowrap; 
+          overflow: hidden; 
+          text-overflow: ellipsis; 
         }
 
         .pc-only-title {
-            display: none; 
+          display: none; 
         }
 
         .mobile-menu {
@@ -394,35 +402,43 @@ const CalendarPage = ({ texts, lang = "ko", highlightEvent = null }) => {
           top: 70px; 
           left: 0; 
           width: 240px;
-          height: auto; 
           max-height: calc(100% - 70px); 
           background: white;
           box-shadow: 4px 0 12px rgba(0,0,0,0.2);
           padding: 20px;
           transition: transform 0.3s ease-out;
           z-index: 500; 
-          
           transform: translateX(-100%);
           pointer-events: none;
           overflow-y: auto; 
         }
+        
         .mobile-menu.open { 
-            transform: translateX(0); 
-            pointer-events: auto;
+          transform: translateX(0); 
+          pointer-events: auto;
         }
 
-        .menu-section { margin-bottom: 20px; }
-        .menu-section h4 { margin-bottom: 8px; font-size: 14px; }
+        .menu-section { 
+          margin-bottom: 20px; 
+        }
+        
+        .menu-section h4 { 
+          margin-bottom: 8px; 
+          font-size: 14px; 
+        }
+        
         .menu-section label {
-            display: flex;
-            align-items: center;
-            margin-bottom: 8px;
-            font-size: 14px;
-            cursor: pointer;
+          display: flex;
+          align-items: center;
+          margin-bottom: 8px;
+          font-size: 14px;
+          cursor: pointer;
         }
+        
         .menu-section input[type="checkbox"] {
-            margin-right: 10px;
+          margin-right: 10px;
         }
+        
         .menu-section button {
           display: block;
           width: 100%;
@@ -434,21 +450,83 @@ const CalendarPage = ({ texts, lang = "ko", highlightEvent = null }) => {
           cursor: pointer;
           text-align: left;
         }
+
+        @media (max-width: 768px) {
+          .rbc-event {
+            font-size: 9px !important;
+            padding: 1px 2px !important;
+            margin: 1px 0 !important;
+            min-height: 14px !important;
+            line-height: 1.1 !important;
+          }
+          
+          .rbc-event-content {
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            display: block !important;
+          }
+          
+          .rbc-event-label {
+            display: none !important;
+          }
+          
+          /* 셀 높이 고정 */
+          .rbc-month-row {
+            height: 70px !important;
+            min-height: 70px !important;
+            max-height: 70px !important;
+          }
+          
+          .rbc-month-view {
+            height: 100% !important;
+          }
+          
+          .rbc-date-cell {
+            padding: 2px !important;
+            font-size: 11px !important;
+          }
+          
+          .rbc-row-segment {
+            padding: 0 1px !important;
+          }
+          
+          .rbc-show-more {
+            display: none !important;
+          }
+        
+          .pc-only-title, .rbc-toolbar { 
+            display: none !important; 
+          }
+          
+          .mobile-only-header { 
+            display: flex !important;
+          }
+
+          .mobile-today {
+            background: #3174ad;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 6px 8px;
+            font-size: 12px;
+            cursor: pointer;
+            white-space: nowrap;
+          }
+        }
         
         @media (min-width: 769px) {
-            .pc-only-title { 
-                display: block; 
-            }
-            .mobile-only-header { 
-                display: none !important;
-            }
-            .mobile-menu { 
-                display: none !important; 
-            }
+          .pc-only-title { 
+            display: block; 
+          }
+          
+          .mobile-only-header, .mobile-menu { 
+            display: none !important;
+          }
         }
       `}</style>
     </div>
   );
 };
 
-export default CalendarPage;  
+export default CalendarPage;
