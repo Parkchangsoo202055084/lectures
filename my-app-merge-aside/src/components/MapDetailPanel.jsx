@@ -7,6 +7,7 @@ export default function MapDetailPanel({ detail, texts = {}, lang = 'ko' }) {
 
   const { type, title, subtitle, data, coords } = detail;
 
+
   const Section = ({ title, children }) => (
     <div style={{ marginTop: 10 }}>
       <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 6 }}>
