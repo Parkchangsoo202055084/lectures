@@ -18,7 +18,7 @@ const BUS_STOPS = [
     stationId: "223000317",
     // 동일한 routeId 사용, 정류장 내 순서(staOrder)는 1
     routeId: "241363002",
-    staOrder: 1,
+    staOrder: 23,
   },
   {
     label: "병점역후문",
@@ -27,7 +27,7 @@ const BUS_STOPS = [
     stationId: "233000701",
     // 동일한 routeId 사용, 정류장 내 순서(staOrder)는 9
     routeId: "241363002",
-    staOrder: 9,
+    staOrder: 18,
   },
 ];
 
@@ -141,10 +141,11 @@ export default function BusLiveMap({ height = "68vh" }) {
 
       const html = list
         .map((r) => {
-          const route =
-            r.routeName || r.ROUTE_NAME || r.routeId || r.ROUTE_ID || "버스";
-          const dest = r.destination || r.PLACE_NAME || "";
-          return `${route} ${dest ? `(${dest})` : ""}: ${toMinuteText(r)}`;
+          const route = r.routeName || r.ROUTE_NAME || r.routeId || r.ROUTE_ID || "버스";
+          const location = r.__raw?.locationNo1 || r.locationNo1;
+          const time = toMinuteText(r).replace(" 후", " 후");
+          const locationText = typeof location === 'number' ? `${location}정류장 전` : "";
+          return `${route}(${locationText}, ${time})`;
         })
         .join("<br/>");
 
