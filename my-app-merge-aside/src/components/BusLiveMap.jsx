@@ -21,12 +21,12 @@ const BUS_STOP = {
  *  배포 전에는 .env에 넣고 가져다 쓰세요!
  *  예: REACT_APP_GG_BUS_KEY=...
  */
-// const API_KEY =
-//   "bf1870619d0cd7bc1694fdb1954715490c1f7202c9040ce4f5607dfd9b7870";
+const API_KEY =
+  "a15e3d2156d9fdca6e76651e9b977dcfd281b8566ca6a4973a25c868f62b5e1f";
 
-// /** 호출할 엔드포인트 (경기도 버스 도착 정보 v2) */
-// const ARRIVAL_ENDPOINT =
-//   "https://apis.data.go.kr/6410000/busarrivalservice/v2/getBusArrivalList";
+/** 호출할 엔드포인트 (경기도 버스 도착 정보 v2) */
+const ARRIVAL_ENDPOINT =
+  "https://apis.data.go.kr/6410000/busarrivalservice/v2/getBusArrivalList";
 
 /** 분 단위/초 단위 모두 대응해서 “X분 후”로 변환 */
 function toMinuteText(r) {
@@ -55,8 +55,14 @@ export default function BusLiveMap({ height = "68vh" }) {
   /** 🚌 도착 정보 불러오기 */
   const fetchBusArrival = async () => {
     try {
-      const res = await fetch(`/api/bus?stationId=${encodeURIComponent(BUS_STOP.stationId)}`);
+      const url =
+        `${ARRIVAL_ENDPOINT}?serviceKey=${API_KEY}` +
+        `&stationId=${encodeURIComponent(BUS_STOP.stationId)}` +
+        `&pageNo=1&numOfRows=10&resultType=json`;
+
+      const res = await fetch(url, { headers: { accept: "application/json" } });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
       const json = await res.json();
 
       // 응답 포맷 호환 처리 (data.go.kr 계열/gg.go.kr 구형 호환)
