@@ -1,6 +1,6 @@
 // FILE: src/components/AssistDetail.jsx
 import React from "react";
-import Community from "./Community";
+import Community from "./community/Community";
 
 export default function AssistDetail({ selected, texts }) {
   if (!selected) {
