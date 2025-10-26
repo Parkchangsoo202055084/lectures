@@ -479,7 +479,7 @@ export default function Community() {
 
       {/* 관리자 패널 버튼 */}
       {isAdmin && !showAdminPanel && (
-        <div style={{ position: 'fixed', bottom: '100px', right: '30px', zIndex: 100 }}>
+        <div style={{ position: 'fixed', bottom: '150px', right: '30px', zIndex: 100 }}>
           <Button $variant="admin" onClick={() => setShowAdminPanel(true)}>
             👑 관리자 패널
           </Button>

@@ -62,7 +62,9 @@ export const TabContainer = styled.div`
   }
 `;
 
-export const TabButton = styled.button`
+export const 
+
+TabButton = styled.button`
   padding: 12px 24px;
   border: none;
   background: ${props => props.$active 
@@ -336,6 +338,7 @@ export const FloatingWriteButton = styled.button`
 
   @media (max-width: 768px) {
     bottom: 80px;
+    right: 20px;
     width: 56px;
     height: 56px;
     font-size: 24px;
