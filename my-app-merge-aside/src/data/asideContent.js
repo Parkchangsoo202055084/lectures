@@ -31,7 +31,12 @@ export const ASIDE_CONTENT = {
             { label: "식당", children: ["학식(18관)", "학식(임마누엘관)"] },
             {
               label: "카페",
-              children: ["카페ing(18관)", "카페ing(경삼관)", "베라티스", "스테이"],
+              children: [
+                "카페ing(18관)",
+                "카페ing(경삼관)",
+                "베라티스",
+                "스테이",
+              ],
             },
             { label: "편의점", children: ["CU", "emart24", "Seven-Eleven"] },
             {
@@ -63,11 +68,12 @@ export const ASIDE_CONTENT = {
             "학교가는 버스 정보",
             "셔틀 운행 시간",
             "병점역 버스 탑승 정보",
+            "정문 길찾기 지도",
           ],
         },
       ],
     },
-    newB: { title: "재학생 정보", items: ["학사일정", "OT 안내"]},
+    newB: { title: "재학생 정보", items: ["학사일정", "OT 안내"] },
     club: { title: "동아리", items: ["중앙동아리", "가입방법"] },
     assist: {
       title: "학생지원",
@@ -101,15 +107,32 @@ export const ASIDE_CONTENT = {
         {
           title: "Facilities",
           items: [
-            { label: "Cafeteria", children: ["Student Cafeteria (18 Hall)", "Student Cafeteria (Emmanuel Hall)"] },
+            {
+              label: "Cafeteria",
+              children: [
+                "Student Cafeteria (18 Hall)",
+                "Student Cafeteria (Emmanuel Hall)",
+              ],
+            },
             {
               label: "Cafe",
-              children: ["Cafeing (18 Hall)", "Cafeing (Kyungsam Hall)", "Veratis", "Stay"],
+              children: [
+                "Cafeing (18 Hall)",
+                "Cafeing (Kyungsam Hall)",
+                "Veratis",
+                "Stay",
+              ],
             },
-            { label: "Convenience Store", children: ["CU", "emart24", "Seven-Eleven"] },
+            {
+              label: "Convenience Store",
+              children: ["CU", "emart24", "Seven-Eleven"],
+            },
             {
               label: "Parking Lot",
-              children: Array.from({ length: 9 }, (_, i) => `Parking Lot ${i + 1}`),
+              children: Array.from(
+                { length: 9 },
+                (_, i) => `Parking Lot ${i + 1}`
+              ),
             },
             { label: "Bank/ATM" },
             { label: "Post Office" },
@@ -140,11 +163,20 @@ export const ASIDE_CONTENT = {
         },
       ],
     },
-    newB: { title: "Current Student Info", items: ["Academic Calendar", "OT Guide"]},
+    newB: {
+      title: "Current Student Info",
+      items: ["Academic Calendar", "OT Guide"],
+    },
     club: { title: "Clubs", items: ["Central Clubs", "How to Join"] },
     assist: {
       title: "Student Support",
-      items: ["Scholarship", "Counseling Center", "Academic Support", "Phone Numbers", "Community"],
+      items: [
+        "Scholarship",
+        "Counseling Center",
+        "Academic Support",
+        "Phone Numbers",
+        "Community",
+      ],
     },
   },
 };

@@ -1,7 +1,7 @@
 // App.js
 import React, { useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
-import {Nav} from "./components/Nav";
+import { Nav } from "./components/Nav";
 import Aside from "./components/Aside";
 import { useKakaoMap } from "./map/useKakaoMap";
 import { MAP_CENTER, DEFAULT_LEVEL } from "./utils/constants";
@@ -29,7 +29,7 @@ const Container = styled.div`
 
   @media (max-width: 768px) {
     flex-direction: column;
-    margin-top: 60px; 
+    margin-top: 60px;
   }
 `;
 
@@ -68,7 +68,7 @@ const MapBox = styled.div`
     height: 100%;
     margin: 0;
     padding: 0;
-    
+
     & > div {
       width: 100% !important;
       height: 100% !important;
@@ -189,8 +189,8 @@ function App() {
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   const toggleLang = () => {
@@ -198,7 +198,7 @@ function App() {
   };
 
   const toggleSidebar = () => {
-    setIsSidebarOpen(prev => !prev);
+    setIsSidebarOpen((prev) => !prev);
   };
 
   const openMobilePopup = () => {
@@ -225,23 +225,23 @@ function App() {
 
   // 모바일에서 지도 탭일 때 body 스크롤 방지
   useEffect(() => {
-    if (isMobile && activeTab === 'map') {
-      document.body.style.overflow = 'hidden';
-      document.body.style.position = 'fixed';
-      document.body.style.width = '100%';
-      document.body.style.height = '100vh';
+    if (isMobile && activeTab === "map") {
+      document.body.style.overflow = "hidden";
+      document.body.style.position = "fixed";
+      document.body.style.width = "100%";
+      document.body.style.height = "100vh";
     } else {
-      document.body.style.overflow = '';
-      document.body.style.position = '';
-      document.body.style.width = '';
-      document.body.style.height = '';
+      document.body.style.overflow = "";
+      document.body.style.position = "";
+      document.body.style.width = "";
+      document.body.style.height = "";
     }
-    
+
     return () => {
-      document.body.style.overflow = '';
-      document.body.style.position = '';
-      document.body.style.width = '';
-      document.body.style.height = '';
+      document.body.style.overflow = "";
+      document.body.style.position = "";
+      document.body.style.width = "";
+      document.body.style.height = "";
     };
   }, [activeTab, isMobile]);
 
@@ -274,44 +274,44 @@ function App() {
   const searchIndexData = useMemo(() => makeSearchIndex(), []);
 
   const runSearch = (query) => {
-    console.log('🔍 검색 시작:', query);
-    
+    console.log("🔍 검색 시작:", query);
+
     const hit = searchIndexData.search(query);
-    console.log('📊 검색 결과:', hit);
-    
+    console.log("📊 검색 결과:", hit);
+
     if (!hit) {
-      console.log('❌ 검색 결과 없음');
+      console.log("❌ 검색 결과 없음");
       alert(texts[lang].nav.searchNoResult);
       return;
     }
-    
-    console.log('✅ 검색 성공!');
-    console.log('📍 결과 타입:', hit.type);
-    console.log('📍 카테고리:', hit.category);
-    console.log('📍 아이템:', hit.item);
-    console.log('📍 이름:', hit.name);
-    
+
+    console.log("✅ 검색 성공!");
+    console.log("📍 결과 타입:", hit.type);
+    console.log("📍 카테고리:", hit.category);
+    console.log("📍 아이템:", hit.item);
+    console.log("📍 이름:", hit.name);
+
     // 🆕 학사일정 검색 처리
     if (hit.type === "calendar") {
-      console.log('📅 학사일정 검색:', hit.title);
+      console.log("📅 학사일정 검색:", hit.title);
       setActiveTab("newB");
       // 언어에 맞는 학사일정 아이템 선택
       const calendarItem = lang === "ko" ? "학사일정" : "Academic Calendar";
       setSelectedItem(calendarItem);
 
-       // 🔧 항상 새로운 객체를 생성하여 useEffect가 트리거되도록 함
-      setHighlightEvent({ 
+      // 🔧 항상 새로운 객체를 생성하여 useEffect가 트리거되도록 함
+      setHighlightEvent({
         ...hit,
-        timestamp: Date.now() // 고유값 추가로 매번 새로운 객체로 인식
+        timestamp: Date.now(), // 고유값 추가로 매번 새로운 객체로 인식
       });
-      
+
       setIsSidebarOpen(false);
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
-    
+
     if (hit.type === "club") {
-      console.log('🎭 동아리 검색:', hit.name, '분과:', hit.category);
+      console.log("🎭 동아리 검색:", hit.name, "분과:", hit.category);
       setActiveTab("club");
       setSelectedItem(texts[lang].aside.club.items[0]);
       setSelectedClub(hit);
@@ -337,35 +337,35 @@ function App() {
       });
 
     waitUntil(() => ready && !!mapRef.current).then(() => {
-      console.log('🗺️ 지도 준비 완료, 핸들러 호출 중...');
-      
+      console.log("🗺️ 지도 준비 완료, 핸들러 호출 중...");
+
       if (hit.type === "building") {
-        console.log('🏢 건물 핸들러 호출:', hit.name);
+        console.log("🏢 건물 핸들러 호출:", hit.name);
         const buildingNameMap = {
           "Janggong Hall (Main)": "장공관(본관)",
-          "Pilhyeon Hall": "필현관", 
+          "Pilhyeon Hall": "필현관",
           "Manwoo Hall": "만우관",
           "Shalom Chapel": "샬롬채플",
           "Immanuel Hall (Student Union)": "임마누엘관(학생회관)",
           "Gyeongsam Hall (Library)": "경삼관(도서관)",
           "Songam Hall": "송암관",
-          "Sotong Hall": "소통관", 
+          "Sotong Hall": "소통관",
           "Learning Practice Building": "학습실습동",
           "Hanul Hall (Gymnasium)": "한울관(체육관)",
           "Seongbin Dormitory": "성빈학사(생활관)",
-          "Saerometer": "새롬터",
+          Saerometer: "새롬터",
           "Haeoreum Hall": "해오름관",
           "Jangjunha Unification Hall": "장준하통일관",
-          "Neutbom Hall": "늦봄관"
+          "Neutbom Hall": "늦봄관",
         };
-        
+
         const koreanName = buildingNameMap[hit.name] || hit.name;
         handleSelectBuilding({ lookup: koreanName, display: hit.name });
       } else if (hit.type === "facility") {
-        console.log('🏪 편의시설 핸들러 호출:', hit.category, hit.item);
+        console.log("🏪 편의시설 핸들러 호출:", hit.category, hit.item);
         handleSelectFacility(hit.category, hit.item);
       } else if (hit.type === "navigation") {
-        console.log('📋 네비게이션 항목으로 이동:', hit.tab, hit.item);
+        console.log("📋 네비게이션 항목으로 이동:", hit.tab, hit.item);
         setActiveTab(hit.tab);
         setSelectedItem(hit.item);
         setIsSidebarOpen(false);
@@ -424,22 +424,44 @@ function App() {
           onToggleSidebar={toggleSidebar}
         />
 
+<<<<<<< HEAD
         <div style={{ 
             padding: "20px", 
             flexGrow: 1, 
         }}>
           <MapSection $active={activeTab === "map"}>
+=======
+        <div
+          style={{
+            padding: "20px",
+            flexGrow: 1,
+          }}
+        >
+          <MapSection active={activeTab === "map"}>
+>>>>>>> 2c324b1 (feat: add BusLiveMap and wire into BusInfo/Aside)
             <MapLayout>
               <MapBox>
                 <MapView id="map" height={600} />
               </MapBox>
               <DetailBox>
-                <MapDetailPanel detail={detail} texts={texts[lang].mapDetails} lang={lang} />
+                <MapDetailPanel
+                  detail={detail}
+                  texts={texts[lang].mapDetails}
+                  lang={lang}
+                />
               </DetailBox>
             </MapLayout>
 
+<<<<<<< HEAD
             <PopupOverlay $isOpen={isMobilePopupOpen} onClick={closeMobilePopup} />
             <MobilePopup $isOpen={isMobilePopupOpen}>
+=======
+            <PopupOverlay
+              isOpen={isMobilePopupOpen}
+              onClick={closeMobilePopup}
+            />
+            <MobilePopup isOpen={isMobilePopupOpen}>
+>>>>>>> 2c324b1 (feat: add BusLiveMap and wire into BusInfo/Aside)
               <PopupHandle />
               <PopupHeader>
                 <h3 style={{ margin: 0, fontSize: "18px" }}>
@@ -448,16 +470,20 @@ function App() {
                 <CloseButton onClick={closeMobilePopup}>×</CloseButton>
               </PopupHeader>
               <PopupContent>
-                <MapDetailPanel detail={detail} texts={texts[lang].mapDetails} lang={lang} />
+                <MapDetailPanel
+                  detail={detail}
+                  texts={texts[lang].mapDetails}
+                  lang={lang}
+                />
               </PopupContent>
             </MobilePopup>
           </MapSection>
 
           {activeTab === "bus" && (
             <>
-              {getAsideItems('bus').some(item => normalize(selectedItem) === normalize(item)) && (
-                <BusInfo selected={selectedItem} texts={texts[lang]} />
-              )}
+              {getAsideItems("bus").some(
+                (item) => normalize(selectedItem) === normalize(item)
+              ) && <BusInfo selected={selectedItem} texts={texts[lang]} />}
               {!selectedItem && (
                 <div style={{ padding: 20, color: "#666" }}>
                   {texts[lang].busInfo.notSelected}
@@ -469,18 +495,24 @@ function App() {
           {activeTab === "newB" && (
             <>
               {(() => {
-                const newBItems = getAsideItems('newB');
-                console.log('newBItems:', newBItems, 'selectedItem:', selectedItem);
+                const newBItems = getAsideItems("newB");
+                console.log(
+                  "newBItems:",
+                  newBItems,
+                  "selectedItem:",
+                  selectedItem
+                );
                 const normalizedSelected = normalize(selectedItem);
                 const normalizedFirst = normalize(newBItems[0]);
                 const normalizedSecond = normalize(newBItems[1]);
-                
+
                 return (
                   <>
                     {normalizedSelected === normalizedFirst && (
-                      <CalendarPage texts={texts[lang].calendarPage} 
-                      lang={lang} 
-                      highlightEvent={highlightEvent}
+                      <CalendarPage
+                        texts={texts[lang].calendarPage}
+                        lang={lang}
+                        highlightEvent={highlightEvent}
                       />
                     )}
                     {normalizedSelected === normalizedSecond && (
@@ -499,15 +531,22 @@ function App() {
 
           {activeTab === "club" && (
             <>
-              {console.log('club tab selectedItem:', selectedItem, 'labels:', getAsideItems('club'))}
-              {normalize(selectedItem) === normalize(getAsideItems('club')[0]) && (
-                <ClubHub 
+              {console.log(
+                "club tab selectedItem:",
+                selectedItem,
+                "labels:",
+                getAsideItems("club")
+              )}
+              {normalize(selectedItem) ===
+                normalize(getAsideItems("club")[0]) && (
+                <ClubHub
                   texts={texts[lang]}
                   lang={lang}
                   initialClub={selectedClub}
                 />
               )}
-              {normalize(selectedItem) === normalize(getAsideItems('club')[1]) && (
+              {normalize(selectedItem) ===
+                normalize(getAsideItems("club")[1]) && (
                 <div style={{ padding: 20 }}>
                   <h2>{texts[lang].clubDetails.howToJoin.title}</h2>
                   <p>{texts[lang].clubDetails.howToJoin.body}</p>
@@ -523,10 +562,15 @@ function App() {
 
           {activeTab === "assist" && (
             <>
-              {console.log('assist tab selectedItem:', selectedItem, 'labels:', getAsideItems('assist'))}
-              {getAsideItems('assist').some(item => normalize(selectedItem) === normalize(item)) && (
-                <AssistDetail selected={selectedItem} texts={texts[lang]} />
+              {console.log(
+                "assist tab selectedItem:",
+                selectedItem,
+                "labels:",
+                getAsideItems("assist")
               )}
+              {getAsideItems("assist").some(
+                (item) => normalize(selectedItem) === normalize(item)
+              ) && <AssistDetail selected={selectedItem} texts={texts[lang]} />}
               {!selectedItem && (
                 <div style={{ padding: 20, color: "#666" }}>
                   {texts[lang].assistDetails.notSelected}
@@ -534,7 +578,6 @@ function App() {
               )}
             </>
           )}
-
         </div>
       </Container>
     </>

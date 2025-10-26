@@ -1,7 +1,6 @@
-// FILE: src/components/BusInfo.js
-
-import React from 'react';
-import styled from 'styled-components';
+import React from "react";
+import styled from "styled-components";
+import BusLiveMap from "./BusLiveMap";
 
 const BusInfoContainer = styled.div`
   padding: 20px;
@@ -29,10 +28,28 @@ const InfoImage = styled.img`
 const BusInfo = ({ selected, texts }) => {
   const busData = texts.busInfo[selected];
 
+  // ✅ "정문 길찾기 지도" 클릭 시: 이미지 대신 지도 보여주기
+  if (selected === "정문 길찾기 지도") {
+    return (
+      <BusInfoContainer>
+        <Title>한신대 정문 정류장 — 길찾기 지도</Title>
+        <div
+          style={{
+            border: "1px solid #eee",
+            borderRadius: 12,
+            overflow: "hidden",
+          }}
+        >
+          <BusLiveMap />
+        </div>
+      </BusInfoContainer>
+    );
+  }
+
   if (!busData) {
     return (
       <BusInfoContainer>
-        <p style={{ color: '#666' }}>{texts.busInfo.notReady}</p>
+        <p style={{ color: "#666" }}>{texts.busInfo.notReady}</p>
       </BusInfoContainer>
     );
   }
@@ -61,6 +78,5 @@ const BusInfo = ({ selected, texts }) => {
     </BusInfoContainer>
   );
 };
-
 
 export default BusInfo;

@@ -11,100 +11,99 @@
   box-sizing: border-box;
 }
 
-.asideSection { 
-  margin-bottom: 24px; 
+.asideSection {
+  margin-bottom: 24px;
 }
 
-.title { 
-  margin: 6px 0 10px; 
-  font-size: 16px; 
-  color: #004d99; 
-  border-bottom: 1px solid #ccc; 
-  padding-bottom: 4px; 
+.title {
+  margin: 6px 0 10px;
+  font-size: 16px;
+  color: #004d99;
+  border-bottom: 1px solid #ccc;
+  padding-bottom: 4px;
 }
 
-.subTitle { 
-  margin: 14px 0 8px; 
+.subTitle {
+  margin: 14px 0 8px;
 }
 
-.asideList { 
-  list-style: none; 
-  margin: 8px 0; 
-  padding: 0; 
+.asideList {
+  list-style: none;
+  margin: 8px 0;
+  padding: 0;
 }
 
-.asideList li { 
-  padding: 6px 0; 
-  cursor: pointer; 
-  transition: background 0.2s; 
+.asideList li {
+  padding: 6px 0;
+  cursor: pointer;
+  transition: background 0.2s;
 }
 
-.asideList li:hover { 
-  background-color: #e0e0e0; 
+.asideList li:hover {
+  background-color: #e0e0e0;
 }
 
-.sectionButton { 
-  width: 100%; 
-  display: flex; 
-  align-items: center; 
-  gap: 8px; 
-  padding: 8px 10px; 
-  border: 1px solid #eee; 
-  border-radius: 8px; 
-  background: #fff; 
-  cursor: pointer; 
+.sectionButton {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
 }
 
-.sectionButton:hover { 
-  background: #faf7ff; 
-  border-color: #e8def8; 
+.sectionButton:hover {
+  background: #faf7ff;
+  border-color: #e8def8;
 }
 
-.treeButton { 
-  display: flex; 
-  align-items: center; 
-  gap: 8px; 
-  padding: 6px 6px; 
-  background: transparent; 
-  border: 0; 
-  cursor: pointer; 
+.treeButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 6px;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
 }
 
-.itemButton { 
-  width: 100%; 
-  text-align: left; 
-  background: #fff; 
-  border: 1px solid #eee; 
-  border-radius: 8px; 
-  padding: 6px 10px; 
-  cursor: pointer; 
+.itemButton {
+  width: 100%;
+  text-align: left;
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 6px 10px;
+  cursor: pointer;
   display: flex;
   align-items: center;
 }
 
-.itemButton:hover { 
-  background: #fafafa; 
+.itemButton:hover {
+  background: #fafafa;
 }
 
-.caret { 
-  width: 8px; 
-  height: 8px; 
-  border-right: 2px solid #5f41b9; 
-  border-bottom: 2px solid #5f41b9; 
-  transform: rotate(45deg); 
-  transition: transform 0.18s ease; 
-  flex: 0 0 auto; 
-  margin-left: 2px; 
+.caret {
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid #5f41b9;
+  border-bottom: 2px solid #5f41b9;
+  transform: rotate(45deg);
+  transition: transform 0.18s ease;
+  flex: 0 0 auto;
+  margin-left: 2px;
 }
 
-.caret[data-open="true"] { 
-  transform: rotate(135deg); 
+.caret[data-open="true"] {
+  transform: rotate(135deg);
 }
 
-.section { 
-  margin-bottom: 10px; 
+.section {
+  margin-bottom: 10px;
 }
-
 
 /* ========== 모바일 하단 네비게이션 ========== */
 .bottomNav {
@@ -118,7 +117,7 @@
   align-items: center;
   background: #fff;
   border-top: 1px solid #ddd;
-  box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
   z-index: 1002;
 }
 
@@ -134,7 +133,7 @@
   transition: color 0.2s;
   padding: 8px;
   flex: 1;
-  line-height: 1; 
+  line-height: 1;
 }
 
 .navButton:active {
@@ -156,7 +155,6 @@
   font-weight: 600;
 }
 
-
 /* ========== 모바일 팝업 메뉴 ========== */
 
 /* 배경 오버레이 */
@@ -172,8 +170,12 @@
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 /* 팝업 메뉴 패널 */
@@ -207,7 +209,7 @@
   padding: 16px;
   overflow-y: auto;
   height: 100%;
-  line-height: 1.5; 
+  line-height: 1.5;
 }
 
 /* 메뉴 내부 스타일 조정 */
@@ -236,7 +238,6 @@
   padding: 8px 12px;
   font-size: 14px;
 }
-
 
 /* ========== 반응형 처리 ========== */
 @media (max-width: 768px) {
