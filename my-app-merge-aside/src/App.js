@@ -12,8 +12,7 @@ import {
 } from "./features/map/handlers";
 import MapDetailPanel from "./components/MapDetailPanel";
 import BusInfo from "./components/BusInfo";
-import CalendarPage from "./components/CalendarPage";
-import OtInfo from "./components/OtInfo";
+import AcademicDetail from "./components/AcademicDetail.jsx";
 import ClubHub from "./components/ClubHub";
 import AssistDetail from "./components/AssistDetail";
 
@@ -467,35 +466,22 @@ function App() {
           )}
 
           {activeTab === "newB" && (
-            <>
-              {(() => {
-                const newBItems = getAsideItems('newB');
-                console.log('newBItems:', newBItems, 'selectedItem:', selectedItem);
-                const normalizedSelected = normalize(selectedItem);
-                const normalizedFirst = normalize(newBItems[0]);
-                const normalizedSecond = normalize(newBItems[1]);
-                
-                return (
-                  <>
-                    {normalizedSelected === normalizedFirst && (
-                      <CalendarPage texts={texts[lang].calendarPage} 
-                      lang={lang} 
-                      highlightEvent={highlightEvent}
-                      />
-                    )}
-                    {normalizedSelected === normalizedSecond && (
-                      <OtInfo texts={texts[lang].otInfo} />
-                    )}
-                  </>
-                );
-              })()}
-              {!selectedItem && (
-                <div style={{ padding: 20, color: "#666" }}>
-                  {texts[lang].newB.notSelected}
-                </div>
-              )}
-            </>
-          )}
+          <>
+            {getAsideItems('newB').some(item => normalize(selectedItem) === normalize(item)) && (
+              <AcademicDetail 
+                selected={selectedItem} 
+                texts={texts[lang]} 
+                lang={lang}
+                highlightEvent={highlightEvent}
+              />
+            )}
+            {!selectedItem && (
+              <div style={{ padding: 20, color: "#666" }}>
+                {texts[lang].newB.notSelected}  
+              </div>
+            )}
+          </>
+        )}
 
           {activeTab === "club" && (
             <>

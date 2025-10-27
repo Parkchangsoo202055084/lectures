@@ -28,8 +28,7 @@ export const texts = {
         ...newBTexts.ko.calendarPage, 
         eventTitles: calendarEventTitles.ko, // 이벤트 제목 통합
     },
-    otInfo: newBTexts.ko.otInfo,
-    newB: newBTexts.ko.newB,
+    newB: newBTexts.ko,
 
     aside: ASIDE_CONTENT.ko,
   },
@@ -48,8 +47,7 @@ export const texts = {
         ...newBTexts.en.calendarPage, 
         eventTitles: calendarEventTitles.en, // 이벤트 제목 통합
     },
-    otInfo: newBTexts.en.otInfo,
-    newB: newBTexts.en.newB,
+    newB: newBTexts.en,
 
     aside: ASIDE_CONTENT.en,
   },
