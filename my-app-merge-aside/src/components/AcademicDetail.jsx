@@ -6,6 +6,47 @@ import CalendarPage from "./CalendarPage";
 export default function AcademicDetail({ selected, texts, lang, highlightEvent }) {
   const [activeTab, setActiveTab] = useState(0);
 
+  // 마크다운 링크를 HTML 링크로 변환하는 함수
+  const renderTextWithLinks = (text) => {
+    if (typeof text !== 'string') return text;
+    
+    const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
+    const parts = [];
+    let lastIndex = 0;
+    let match;
+
+    while ((match = linkRegex.exec(text)) !== null) {
+      // 링크 앞의 텍스트
+      if (match.index > lastIndex) {
+        parts.push(text.substring(lastIndex, match.index));
+      }
+      // 링크
+      parts.push(
+        <a
+          key={match.index}
+          href={match[2]}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ 
+            color: "#4285f4", 
+            textDecoration: "underline",
+            cursor: "pointer"
+          }}
+        >
+          {match[1]}
+        </a>
+      );
+      lastIndex = match.index + match[0].length;
+    }
+
+    // 남은 텍스트
+    if (lastIndex < text.length) {
+      parts.push(text.substring(lastIndex));
+    }
+
+    return parts.length > 0 ? parts : text;
+  };
+
   if (!selected) {
     return null;
   }
@@ -53,21 +94,30 @@ export default function AcademicDetail({ selected, texts, lang, highlightEvent }
         <p>{data.body.intro}</p>
         
         {/* 탭 버튼 */}
-        <div style={{ display: "flex", gap: "12px", marginTop: "16px", marginBottom: "16px", flexWrap: "wrap" }}>
+        <div style={{ 
+          display: "flex", 
+          gap: "12px", 
+          marginTop: "16px", 
+          marginBottom: "16px", 
+          flexWrap: "wrap",
+          overflowX: "auto",
+          paddingBottom: "8px"
+        }}>
           {data.body.sections.map((section, index) => (
             <button
               key={index}
               onClick={() => setActiveTab(index)}
               style={{
                 padding: activeTab === index ? "8px 16px" : "6px 14px",
-                background: activeTab === index ? "#401e83" : "transparent",
+                background: activeTab === index ? "#401e83" : "#e0e0e0",
                 color: activeTab === index ? "white" : "#2b2b2b",
-                border: "none",
+                border: "1px solid #ccc",
                 borderRadius: "6px",
                 cursor: "pointer",
                 fontWeight: "bold",
                 transition: "all 0.2s",
                 fontSize: "14px",
+                whiteSpace: "nowrap",
               }}
             >
               {section.title}
@@ -84,7 +134,7 @@ export default function AcademicDetail({ selected, texts, lang, highlightEvent }
             }
             
             // 대괄호로 시작하는 항목은 서브 제목
-            if (item.startsWith("[")) {
+            if (item.startsWith("[") && !item.includes("](")) {
               return (
                 <li key={index} style={{ fontWeight: "600", marginTop: "12px", marginLeft: "8px" }}>
                   {item}
@@ -95,7 +145,7 @@ export default function AcademicDetail({ selected, texts, lang, highlightEvent }
             // 일반 항목은 들여쓰기
             return (
               <li key={index} style={{ marginLeft: "16px", color: "#555" }}>
-                {item}
+                {renderTextWithLinks(item)}
               </li>
             );
           })}
@@ -134,8 +184,8 @@ export default function AcademicDetail({ selected, texts, lang, highlightEvent }
               );
             }
             
-            // 대괄호로 시작하는 항목은 서브 제목
-            if (item.startsWith("[")) {
+            // 링크([text](url))는 그대로 렌더링하고, 대괄호로 시작하지만 링크가 아닐 때만 서브 제목으로 처리
+            if (item.startsWith("[") && !item.includes("](")) {
               return (
                 <li key={index} style={{ fontWeight: "600", marginTop: "12px", marginLeft: "8px" }}>
                   {item}
@@ -146,7 +196,7 @@ export default function AcademicDetail({ selected, texts, lang, highlightEvent }
             // 일반 항목은 들여쓰기
             return (
               <li key={index} style={{ marginLeft: "16px", color: "#555" }}>
-                {item}
+                {renderTextWithLinks(item)}
               </li>
             );
           })}
