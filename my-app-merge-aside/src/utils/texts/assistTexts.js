@@ -2,8 +2,10 @@
 
 export const assistTexts = {
   ko: {
-    notSelected: "좌측에서 항목을 선택하세요. (장학금 / 상담센터 / 학습지원 / 교내 전화번호 / 커뮤니티)",
+    notSelected: "좌측에서 항목을 선택하세요.(지원 서비스 / 연락처·커뮤니티)",
     notReady: "해당 항목의 내용이 아직 준비되지 않았습니다.",
+    
+    // 지원 서비스
     "장학금": {
       title: "장학금 안내",
       body: {
@@ -38,6 +40,8 @@ export const assistTexts = {
         ],
       },
     },
+    
+    // 연락처/커뮤니티
     "교내 전화번호": {
       title: "교내 전화번호",
       body: {
@@ -53,16 +57,18 @@ export const assistTexts = {
     },
   },
   en: {
-    notSelected: "Select an item from the left. (Scholarship / Counseling Center / Academic Support / Phone Numbers / Community)",
+    notSelected: "Select an item from the left.(Support Services / Contact·Community)",
     notReady: "Content for this item is not yet available.",
+    
+    // Support Services
     "Scholarship": {
       title: "Scholarship Guide",
       body: {
         intro: "A summary of application details, eligibility, and deadlines for academic, on-campus, national, and work-study scholarships.",
         list: [
           "Academic Scholarship: Based on previous semester's grades, differentiated payment within tuition fees",
-          "National Scholarship: Apply through the Korea Student Aid Foundation, support based on income bracket.",
-          "Work-study: On-campus work, hourly wage system.",
+          "National Scholarship: Apply through the Korea Student Aid Foundation, support based on income bracket",
+          "Work-study: On-campus work, hourly wage system",
           "Other: External scholarship links (foundations, local governments, etc.)",
         ],
       },
@@ -89,6 +95,8 @@ export const assistTexts = {
         ],
       },
     },
+    
+    // Contact/Community
     "Phone Numbers": {
       title: "Phone Numbers",
       body: {
