@@ -98,6 +98,46 @@ export const newBTexts = {
         ],
       },
     },
+     "구내식당": {
+      title: "구내식당 안내",
+      body: {
+        intro: "한신대학교 구내식당 운영 안내입니다.",
+        sections: [
+          {
+            title: "📍 임마누엘관 학생식당",
+            items: [
+              "운영일자: 9/1 ~",
+              "운영요일: 월~금",
+              "운영시간: 11:30 ~ 13:30",
+              "메뉴: 1식 5~6찬",
+              "가격: 6,000원",
+            ],
+          },
+          {
+            title: "📍 장준하통일관 학생식당",
+            items: [
+              "운영일자: 10/13 ~",
+              "운영요일: 월~목 (금요일 미운영)",
+              "운영시간: 12:00 ~ 13:00",
+              "메뉴: 간편식 OR 한식",
+              "가격: 6,000원",
+              "※ 금요일은 천원의 아침밥 운영",
+            ],
+          },
+          {
+            title: "🌅 천원의 아침밥",
+            items: [
+              "운영기간: 10/13 ~ 12/12",
+              "운영시간: 8:40 ~ 11:00",
+              "운영요일: 월~금",
+              "",
+              "[생활관 CU편의점] 선착순 100개",
+              "[장준하통일관 CU편의점] 선착순 30개",
+            ],
+          },
+        ],
+      },
+    },  
   },
   en: {
     notSelected: "Select an item from the left.(Academic Info / New Student Info / Campus Life)",
@@ -193,6 +233,49 @@ export const newBTexts = {
           "1. Select HANSHIN_WIFI from [Wireless Networks]",
           "2. Connect to the internet",
           "3. Enter wireless security password [0313790114]",
+        ],
+      },
+    },
+      "Cafeteria": {
+      title: "Cafeteria Guide",
+      body: {
+        intro: "Information about the cafeteria services at Hanshin University.",
+        sections: [
+          {
+            title: "📍 Emmanuel Hall Cafeteria",
+            items: [
+               " Operating Dates: 9/1 ~",
+              " Operating Days: Mon~Fri",
+              " Operating Hours: 11:30 ~ 13:30",
+              " Menu: 5~6 side dishes",
+              " Price: 6,000 KRW",
+            ],
+          },
+          {
+            title: "📍 Jangjunha Unification Hall Cafeteria",
+            items: [
+              " Operating Dates: 10/13 ~",
+              " Operating Days: Mon~Thu (Closed on Fri)",
+              " Operating Hours: 12:00 ~ 13:00",
+              " Menu: Simple meal OR Korean meal",
+              " Price: 6,000 KRW",
+              " ※ Breakfast for 1,000 KRW on Fridays",
+            ],
+          },
+          {
+            title: "🌅 Breakfast for 1,000 KRW",
+            items: [
+              " Operating Period: 10/13 ~ 12/12",
+              " Operating Hours: 8:40 ~ 11:00",
+              " Operating Days: Mon~Fri",
+              "",
+              "[Dormitory CU Convenience Store]",
+              "First 100 customers",
+              "",
+              "[Jangjunha Unification Hall CU Convenience Store]",
+              "First 30 customers",
+            ],
+          },
         ],
       },
     },

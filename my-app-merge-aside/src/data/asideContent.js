@@ -86,7 +86,7 @@ export const ASIDE_CONTENT = {
         },
         {
           title: "캠퍼스 생활",
-          items: ["한신대 와이파이"]
+          items: ["한신대 와이파이", "구내식당"]
         }
       ]
     },
@@ -205,7 +205,7 @@ export const ASIDE_CONTENT = {
         },
         {
           title: "Campus Life",
-          items: ["Hanshin WiFi"]
+          items: ["Hanshin WiFi", "Cafeteria"]
         }
       ]
     },
