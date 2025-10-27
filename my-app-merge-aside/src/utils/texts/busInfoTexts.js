@@ -2,6 +2,7 @@
 
 const busImages = {
   ko: {
+    '56': '56번 버스 운행 시간표',
     '1550-1': '1550-1 운행 시간표',
     '1552': '1552 운행 시간표',
     '5104_1': '5104 서울 세마',
@@ -12,8 +13,10 @@ const busImages = {
     '학교가는 버스 정보': '한신대학교 버스 노선도',
     '셔틀 운행 시간': '셔틀 운행 시간',
     '병점역 버스 탑승 정보': '병점역 버스 탑승',
+    '정문 길찾기 지도': '한신대 정문 길찾기',
   },
   en: {
+    '56': 'Bus Route 56 Schedule',
     '1550-1': '1550-1 Bus Schedule',
     '1552': '1552 Bus Schedule',
     '5104_1': '5104 Seoul Sema',
@@ -24,6 +27,7 @@ const busImages = {
     "Bus Info to School": 'Bus Info to School',
     "Shuttle Schedule": 'Shuttle Schedule',
     "Byeongjeom Station Bus Info": 'Byeongjeom Station Bus Info',
+    "Main Gate Map": 'Hanshin Main Gate Map',
   }
 };
 
@@ -32,6 +36,10 @@ export const busInfoTexts = {
     notSelected: "좌측에서 항목을 선택하세요.(버스 노선 / 셔틀버스 / 기타 정보)",
     notReady: "해당 항목의 내용이 아직 준비되지 않았습니다.",
     imageAlt: busImages.ko,
+    "56": {
+      title: "56번 버스 노선 정보",
+      images: [{ src: "56번 버스.jpg", altKey: "56", style: { width: "80%", height: "auto" } }],
+    },
     "1550-1": {
       title: "1550-1번 버스 노선 정보",
       images: [{ src: "1550-1 운행시간표.jpeg", altKey: "1550-1", style: { width: "80%", height: "auto" } }],
@@ -75,11 +83,19 @@ export const busInfoTexts = {
       title: "병점역 버스 탑승 안내",
       images: [{ src: "병점역 버스 탑승.jpeg", altKey: "병점역 버스 탑승 정보", style: { width: "80%", height: "auto" } }],
     },
+    "정문 길찾기 지도": {
+      title: "한신대 정문 정류장 — 길찾기 지도",
+      // BusLiveMap 컴포넌트가 렌더링됩니다
+    },
   },
   en: {
     notSelected: "Select an item from the left. (Bus Routes / Shuttle Bus / Other Info)",
     notReady: "Content for this item is not yet available.",
     imageAlt: busImages.en,
+    "56": {
+      title: "Bus Route 56",
+      images: [{ src: "56번 버스.jpg", altKey: "56", style: { width: "80%", height: "auto" } }],
+    },
     "1550-1": {
       title: "Bus Route 1550-1",
       images: [{ src: "1550-1 운행시간표.jpeg", altKey: "1550-1", style: { width: "80%", height: "auto" } }],
@@ -122,6 +138,10 @@ export const busInfoTexts = {
     "Byeongjeom Station Bus Info": {
       title: "Byeongjeom Station Bus Info",
       images: [{ src: "병점역 버스 탑승.jpeg", altKey: "Byeongjeom Station Bus Info", style: { width: "80%", height: "auto" } }],
+    },
+    "Main Gate Map": {
+      title: "Hanshin Main Gate — Navigation Map",
+      // BusLiveMap component will be rendered
     },
   },
 };

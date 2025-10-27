@@ -308,8 +308,12 @@ const Aside = ({
                   // For map-related simple lists we may need to translate to Korean for lookup,
                   // but for other tabs we should send the visible label (displayName) so App matches texts.
                   if (activeTab === "bus") {
-                    // bus items are identifiers / names — keep as-is
-                    if (onSelectItem) onSelectItem(displayName);
+                    // 버스 탭에서는 영문인 경우 한글로 변환
+                    let busName = displayName;
+                    if (isEnglishQuery(busName)) {
+                      busName = translateToKorean(busName);
+                    }
+                    if (onSelectItem) onSelectItem(busName);
                   } else if (onSelectItem) {
                     onSelectItem(displayName);
                   }

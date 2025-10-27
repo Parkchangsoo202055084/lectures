@@ -52,18 +52,18 @@ export const ASIDE_CONTENT = {
       ],
     },
     bus: {
-      title: "버스 정보",
+      title: "교통/셔틀",
       collapsible: [
         {
           title: "버스 노선",
-          items: ["1550-1", "1552", "5104", "M4449"],
+          items: ["56", "1550-1", "1552", "5104", "M4449"],
         },
         {
           title: "셔틀버스",
           items: ["수원역 셔틀", "동탄 경유 셔틀"],
         },
         {
-          title: "기타 정보",
+          title: "교통 정보",
           items: [
             "학교가는 버스 정보",
             "셔틀 운행 시간",
@@ -73,11 +73,39 @@ export const ASIDE_CONTENT = {
         },
       ],
     },
-    newB: { title: "재학생 정보", items: ["학사일정", "OT 안내"] },
-    club: { title: "동아리", items: ["중앙동아리", "가입방법"] },
+    newB: { 
+      title: "학사 안내",
+      collapsible: [
+        {
+          title: "학사 정보",
+          items: ["학사일정", "강의실 찾기", "졸업 요건"]
+        },
+        {
+          title: "신입생 정보",
+          items: ["OT 안내", "학생 예비군"]
+        },
+        {
+          title: "캠퍼스 생활",
+          items: ["한신대 와이파이"]
+        }
+      ]
+    },
+    club: { 
+      title: "동아리", 
+      items: ["중앙동아리", "가입방법"] 
+    },
     assist: {
       title: "학생지원",
-      items: ["장학금", "상담센터", "학습지원", "교내 전화번호", "커뮤니티"],
+      collapsible: [
+        {
+          title: "지원 서비스",
+          items: ["장학금", "상담센터", "학습지원"]
+        },
+        {
+          title: "연락처/커뮤니티",
+          items: ["교내 전화번호", "커뮤니티"]
+        }
+      ]
     },
   },
   en: {
@@ -143,40 +171,60 @@ export const ASIDE_CONTENT = {
       ],
     },
     bus: {
-      title: "Bus Info",
+      title: "Transportation",
       collapsible: [
         {
           title: "Bus Routes",
-          items: ["1550-1", "1552", "5104", "M4449"],
+          items: ["56", "1550-1", "1552", "5104", "M4449"],
         },
         {
           title: "Shuttle Bus",
           items: ["Suwon Station Shuttle", "Dongtan Shuttle"],
         },
         {
-          title: "Other Info",
+          title: "Transportation Info",
           items: [
             "Bus Info to School",
             "Shuttle Schedule",
             "Byeongjeom Station Bus Info",
+            "Main Gate Map",
           ],
         },
       ],
     },
     newB: {
-      title: "Current Student Info",
-      items: ["Academic Calendar", "OT Guide"],
+      title: "Academic Guide",
+      collapsible: [
+        {
+          title: "Academic Info",
+          items: ["Academic Calendar", "Classroom Finder", "Graduation Requirements"]
+        },
+        {
+          title: "New Student Info",
+          items: ["OT Guide", "Student Reserve Forces"]
+        },
+        {
+          title: "Campus Life",
+          items: ["Hanshin WiFi"]
+        }
+      ]
     },
-    club: { title: "Clubs", items: ["Central Clubs", "How to Join"] },
+    club: { 
+      title: "Clubs", 
+      items: ["Central Clubs", "How to Join"] 
+    },
     assist: {
       title: "Student Support",
-      items: [
-        "Scholarship",
-        "Counseling Center",
-        "Academic Support",
-        "Phone Numbers",
-        "Community",
-      ],
+      collapsible: [
+        {
+          title: "Support Services",
+          items: ["Scholarship", "Counseling Center", "Academic Support"]
+        },
+        {
+          title: "Contact/Community",
+          items: ["Phone Numbers", "Community"]
+        }
+      ]
     },
   },
 };
