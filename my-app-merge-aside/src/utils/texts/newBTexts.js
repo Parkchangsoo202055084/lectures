@@ -53,7 +53,6 @@ export const newBTexts = {
           " 8학기 이상 등록",
           "",
           "졸업요건 링크:",
-
           "[졸업](https://www.hs.ac.kr/kor/4935/subview.do)",
         ],
       },
@@ -96,7 +95,7 @@ export const newBTexts = {
         ],
       },
     },
-     "구내식당": {
+    "구내식당": {
       title: "구내식당 안내",
       body: {
         intro: "한신대학교 구내식당 운영 안내입니다.",
@@ -132,6 +131,10 @@ export const newBTexts = {
               "[생활관 CU편의점] 선착순 100개",
               "[장준하통일관 CU편의점] 선착순 30개",
             ],
+          },
+          {
+            title: "🍱 이번 주 학식 메뉴",
+            items: [], // 이 탭은 MealMenu 컴포넌트로 렌더링됨
           },
         ],
       },
@@ -231,7 +234,7 @@ export const newBTexts = {
         ],
       },
     },
-      "Cafeteria": {
+    "Cafeteria": {
       title: "Cafeteria Guide",
       body: {
         intro: "Information about the cafeteria services at Hanshin University.",
@@ -239,7 +242,7 @@ export const newBTexts = {
           {
             title: "📍 Emmanuel Hall Cafeteria",
             items: [
-               " Operating Dates: 9/1 ~",
+              " Operating Dates: 9/1 ~",
               " Operating Days: Mon~Fri",
               " Operating Hours: 11:30 ~ 13:30",
               " Menu: 5~6 side dishes",
@@ -270,6 +273,10 @@ export const newBTexts = {
               "[Jangjunha Unification Hall CU Convenience Store]",
               "First 30 customers",
             ],
+          },
+          {
+            title: "🍱 This Week's Meal Menu",
+            items: [], // This tab will be rendered by MealMenu component
           },
         ],
       },

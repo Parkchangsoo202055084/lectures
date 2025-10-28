@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import CalendarPage from "./CalendarPage";
+import MealMenu from "./MealMenu";
 
 export default function AcademicDetail({ selected, texts, lang, highlightEvent }) {
   const [activeTab, setActiveTab] = useState(0);
@@ -125,31 +126,37 @@ export default function AcademicDetail({ selected, texts, lang, highlightEvent }
           ))}
         </div>
         
-        {/* 탭 내용 - 기존 list 스타일 유지 */}
-        <ul style={{ lineHeight: 1.7, listStyle: "none", paddingLeft: 0 }}>
-          {currentSection.items.map((item, index) => {
-            // 빈 문자열은 섹션 구분용 여백
-            if (item === "") {
-              return <li key={index} style={{ height: "16px" }}></li>;
-            }
-            
-            // 대괄호로 시작하는 항목은 서브 제목
-            if (item.startsWith("[") && !item.includes("](")) {
+        {/* 탭 내용 */}
+        {/* 🍱 학식 메뉴 탭인 경우 MealMenu 컴포넌트 렌더링 */}
+        {currentSection.title === "🍱 이번 주 학식 메뉴" || currentSection.title === "🍱 This Week's Meal Menu" ? (
+          <MealMenu texts={texts} lang={lang} />
+        ) : (
+          /* 기존 list 스타일로 탭 내용 표시 */
+          <ul style={{ lineHeight: 1.7, listStyle: "none", paddingLeft: 0 }}>
+            {currentSection.items.map((item, index) => {
+              // 빈 문자열은 섹션 구분용 여백
+              if (item === "") {
+                return <li key={index} style={{ height: "16px" }}></li>;
+              }
+              
+              // 대괄호로 시작하는 항목은 서브 제목
+              if (item.startsWith("[") && !item.includes("](")) {
+                return (
+                  <li key={index} style={{ fontWeight: "600", marginTop: "12px", marginLeft: "8px" }}>
+                    {item}
+                  </li>
+                );
+              }
+              
+              // 일반 항목은 들여쓰기
               return (
-                <li key={index} style={{ fontWeight: "600", marginTop: "12px", marginLeft: "8px" }}>
-                  {item}
+                <li key={index} style={{ marginLeft: "16px", color: "#555" }}>
+                  {renderTextWithLinks(item)}
                 </li>
               );
-            }
-            
-            // 일반 항목은 들여쓰기
-            return (
-              <li key={index} style={{ marginLeft: "16px", color: "#555" }}>
-                {renderTextWithLinks(item)}
-              </li>
-            );
-          })}
-        </ul>
+            })}
+          </ul>
+        )}
       </div>
     );
   }
