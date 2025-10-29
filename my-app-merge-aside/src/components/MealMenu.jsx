@@ -10,9 +10,13 @@ const Container = styled.div`
 
 const DayGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(5, 1fr); // 🆕 5개 칸 고정
+  gap: 12px;
   margin-bottom: 20px;
+
+  @media (max-width: 1200px) {
+    grid-template-columns: repeat(3, 1fr);
+  }
 
   @media (max-width: 768px) {
     grid-template-columns: 1fr;
@@ -23,9 +27,12 @@ const DayCard = styled.div`
   background: ${props => props.$isToday ? '#fff9e6' : 'white'};
   border: ${props => props.$isToday ? '2px solid #401e83' : '1px solid #eee'};
   border-radius: 12px;
-  padding: 16px;
+  padding: 14px; // 🆕 패딩 줄임
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   transition: transform 0.2s;
+  min-height: 300px; // 🆕 최소 높이 설정
+  display: flex;
+  flex-direction: column;
 
   &:hover {
     transform: translateY(-4px);
@@ -37,24 +44,42 @@ const DayHeader = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
-  padding-bottom: 8px;
+  margin-bottom: 10px; // 🆕 줄임
+  padding-bottom: 6px;
   border-bottom: 2px solid #f0f0f0;
 `;
 
 const DayName = styled.h3`
   margin: 0;
-  font-size: 18px;
+  font-size: 16px; // 🆕 폰트 크기 줄임
   color: ${props => props.$isToday ? '#401e83' : '#333'};
 `;
 
 const TodayBadge = styled.span`
   background: #401e83;
   color: white;
-  padding: 4px 12px;
-  border-radius: 12px;
-  font-size: 12px;
+  padding: 3px 10px; // 🆕 크기 줄임
+  border-radius: 10px;
+  font-size: 11px;
   font-weight: bold;
+`;
+
+const RestaurantSection = styled.div`
+  margin-bottom: 12px; // 🆕 줄임
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+`;
+
+const RestaurantTitle = styled.h4`
+  margin: 0 0 6px 0; // 🆕 줄임
+  font-size: 13px; // 🆕 폰트 크기 줄임
+  font-weight: bold;
+  color: #401e83;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 `;
 
 const MenuList = styled.ul`
@@ -64,11 +89,13 @@ const MenuList = styled.ul`
 `;
 
 const MenuItem = styled.li`
-  padding: 8px 0;
+  padding: 5px 0; // 🆕 줄임
   color: #555;
-  font-size: 14px;
-  line-height: 1.6;
+  font-size: 12px; // 🆕 폰트 크기 줄임
+  line-height: 1.4;
   border-bottom: 1px dashed #eee;
+  word-break: keep-all; // 🆕 한글 단어 단위 줄바꿈
+  overflow-wrap: break-word; // 🆕 긴 영문 줄바꿈
 
   &:last-child {
     border-bottom: none;
@@ -110,6 +137,17 @@ export default function MealMenu({ texts, lang }) {
     en: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
   };
 
+  const restaurantNames = {
+    ko: {
+      immanuel: '🏛️ 임마누엘관',
+      jangjunha: '🏢 장준하통일관'
+    },
+    en: {
+      immanuel: '🏛️ Emmanuel',
+      jangjunha: '🏢 Jangjunha'
+    }
+  };
+
   useEffect(() => {
     fetchMealData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -120,7 +158,6 @@ export default function MealMenu({ texts, lang }) {
       setLoading(true);
       setError(null);
 
-      // 이번 주의 월요일과 금요일 날짜 계산
       const today = new Date();
       const day = today.getDay();
       const diff = day === 0 ? -6 : 1 - day;
@@ -133,7 +170,6 @@ export default function MealMenu({ texts, lang }) {
       friday.setDate(monday.getDate() + 4);
       friday.setHours(23, 59, 59, 999);
 
-      // Firestore에서 이번 주 식단 가져오기
       const mealsRef = collection(db, 'meals');
       const q = query(
         mealsRef,
@@ -148,16 +184,18 @@ export default function MealMenu({ texts, lang }) {
       querySnapshot.forEach((doc) => {
         const data = doc.data();
         const date = data.date.toDate();
-        const dayKey = date.getDay() - 1; // 월요일=0, 화요일=1, ...
+        const dayKey = date.getDay() - 1;
         
         if (dayKey >= 0 && dayKey < 5) {
           meals[dayKey] = {
             date: date,
-            menu: data.menu || []
+            immanuel: data.immanuel || [],
+            jangjunha: data.jangjunha || []
           };
         }
       });
 
+      console.log('📊 Fetched meal data:', meals);
       setWeekData(meals);
     } catch (err) {
       console.error('Error fetching meal data:', err);
@@ -174,6 +212,15 @@ export default function MealMenu({ texts, lang }) {
       date.getMonth() === today.getMonth() &&
       date.getFullYear() === today.getFullYear();
   };
+
+  // 🆕 공백 제거 + 길이 조정 함수
+const cleanAndTruncateText = (text, maxLength = 40) => {
+  // 공백 여러 개를 하나로 줄이기
+  const cleaned = text.replace(/\s+/g, ' ').trim();
+  
+  if (cleaned.length <= maxLength) return cleaned;
+  return cleaned.substring(0, maxLength) + '...';
+};
 
   if (loading) {
     return (
@@ -211,7 +258,7 @@ export default function MealMenu({ texts, lang }) {
 
   return (
     <Container>
-      <h2 style={{ marginBottom: '24px', fontSize: '24px' }}>
+      <h2 style={{ marginBottom: '20px', fontSize: '22px' }}>
         {lang === 'ko' ? '🍱 이번 주 학식 메뉴' : '🍱 This Week\'s Meal Menu'}
       </h2>
 
@@ -233,14 +280,50 @@ export default function MealMenu({ texts, lang }) {
                 )}
               </DayHeader>
 
-              {dayData && dayData.menu && dayData.menu.length > 0 ? (
-                <MenuList>
-                  {dayData.menu.map((item, idx) => (
-                    <MenuItem key={idx}>{item}</MenuItem>
-                  ))}
-                </MenuList>
+              {dayData ? (
+                <>
+                  {/* 임마누엘관 */}
+                  {dayData.immanuel && dayData.immanuel.length > 0 && (
+                    <RestaurantSection>
+                      <RestaurantTitle>
+                        {restaurantNames[lang].immanuel}
+                      </RestaurantTitle>
+                      <MenuList>
+                        {dayData.immanuel.map((item, idx) => (
+                          <MenuItem key={idx} title={item.replace(/\s+/g, ' ').trim()}> 
+                            {cleanAndTruncateText(item, 35)}
+                          </MenuItem>
+                        ))}
+                      </MenuList>
+                    </RestaurantSection>
+                  )}
+
+                  {/* 장준하통일관 */}
+                  {dayData.jangjunha && dayData.jangjunha.length > 0 && (
+                    <RestaurantSection>
+                      <RestaurantTitle>
+                        {restaurantNames[lang].jangjunha}
+                      </RestaurantTitle>
+                      <MenuList>
+                        {dayData.jangjunha.map((item, idx) => (
+                          <MenuItem key={idx} title={item.replace(/\s+/g, ' ').trim()}>
+                            {cleanAndTruncateText(item, 35)}
+                          </MenuItem>
+                        ))}
+                      </MenuList>
+                    </RestaurantSection>
+                  )}
+
+                  {/* 둘 다 없으면 */}
+                  {(!dayData.immanuel || dayData.immanuel.length === 0) && 
+                   (!dayData.jangjunha || dayData.jangjunha.length === 0) && (
+                    <div style={{ color: '#999', fontSize: '13px', padding: '10px 0' }}>
+                      {lang === 'ko' ? '메뉴 정보 없음' : 'No menu available'}
+                    </div>
+                  )}
+                </>
               ) : (
-                <div style={{ color: '#999', fontSize: '14px', padding: '12px 0' }}>
+                <div style={{ color: '#999', fontSize: '13px', padding: '10px 0' }}>
                   {lang === 'ko' ? '메뉴 정보 없음' : 'No menu available'}
                 </div>
               )}
