@@ -1,11 +1,93 @@
 // FILE: src/components/AcademicDetail.jsx
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import CalendarPage from "./CalendarPage";
 import MealMenu from "./MealMenu";
 
+// 모바일용 탭 메뉴 (햄버거 드롭다운)
+const MobileTabMenu = ({ tabs, activeTab, setActiveTab, onClose, buttonRef }) => {
+  const [position, setPosition] = useState({ top: 0, right: 0 });
+
+  useEffect(() => {
+    if (buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setPosition({
+        top: rect.bottom + 4,
+        right: window.innerWidth - rect.right,
+      });
+    }
+  }, [buttonRef]);
+
+  return (
+    <>
+      <div
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: "transparent",
+          zIndex: 998,
+        }}
+        onClick={onClose}
+      />
+      <div
+        style={{
+          position: "fixed",
+          top: `${position.top}px`,
+          right: `${position.right}px`,
+          background: "white",
+          borderRadius: "8px",
+          boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+          zIndex: 999,
+          overflow: "hidden",
+          minWidth: "180px",
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {tabs.map((section, index) => {
+          const isActive = activeTab === index;
+          return (
+            <button
+              key={index}
+              onClick={() => {
+                setActiveTab(index);
+                onClose();
+              }}
+              style={{
+                display: "block",
+                width: "100%",
+                padding: "12px 16px",
+                border: "none",
+                background: isActive ? "#401e83" : "white",
+                color: isActive ? "white" : "#333",
+                cursor: "pointer",
+                fontSize: "14px",
+                textAlign: "left",
+                borderBottom: index < tabs.length - 1 ? "1px solid #f0f0f0" : "none",
+              }}
+            >
+              {section.title}
+            </button>
+          );
+        })}
+      </div>
+    </>
+  );
+};
+
 export default function AcademicDetail({ selected, texts, lang, highlightEvent }) {
   const [activeTab, setActiveTab] = useState(0);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [isTabMenuOpen, setIsTabMenuOpen] = useState(false);
+  const hamburgerRef = useRef(null);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // 마크다운 링크를 HTML 링크로 변환하는 함수
   const renderTextWithLinks = (text) => {
@@ -91,40 +173,77 @@ export default function AcademicDetail({ selected, texts, lang, highlightEvent }
           boxShadow: "0 2px 6px rgba(0,0,0,0.04)",
         }}
       >
-        <h2 style={{ margin: "8px 0 12px" }}>{data.title}</h2>
-        <p>{data.body.intro}</p>
-        
-        {/* 탭 버튼 */}
+        {/* 제목 + 모바일 햄버거 메뉴 */}
         <div style={{ 
           display: "flex", 
-          gap: "12px", 
-          marginTop: "16px", 
-          marginBottom: "16px", 
-          flexWrap: "wrap",
-          overflowX: "auto",
-          paddingBottom: "8px"
+          justifyContent: "space-between", 
+          alignItems: "center",
+          marginBottom: "12px"
         }}>
-          {data.body.sections.map((section, index) => (
+          <h2 style={{ margin: "8px 0 0" }}>{data.title}</h2>
+          
+          {isMobile && (
             <button
-              key={index}
-              onClick={() => setActiveTab(index)}
+              ref={hamburgerRef}
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsTabMenuOpen(true);
+              }}
               style={{
-                padding: activeTab === index ? "8px 16px" : "6px 14px",
-                background: activeTab === index ? "#401e83" : "#e0e0e0",
-                color: activeTab === index ? "white" : "#2b2b2b",
-                border: "1px solid #ccc",
-                borderRadius: "6px",
+                background: "#401e83",
+                border: "none",
+                color: "white",
+                padding: "8px 16px",
+                borderRadius: "8px",
                 cursor: "pointer",
-                fontWeight: "bold",
-                transition: "all 0.2s",
                 fontSize: "14px",
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
                 whiteSpace: "nowrap",
               }}
             >
-              {section.title}
+              <span style={{ fontSize: "18px" }}>☰</span>
+              <span>{currentSection.title}</span>
             </button>
-          ))}
+          )}
         </div>
+
+        <p>{data.body.intro}</p>
+        
+        {/* PC: 탭 버튼 */}
+        {!isMobile && (
+          <div style={{ 
+            display: "flex", 
+            gap: "12px", 
+            marginTop: "16px", 
+            marginBottom: "16px", 
+            flexWrap: "wrap",
+            overflowX: "auto",
+            paddingBottom: "8px"
+          }}>
+            {data.body.sections.map((section, index) => (
+              <button
+                key={index}
+                onClick={() => setActiveTab(index)}
+                style={{
+                  padding: activeTab === index ? "8px 16px" : "6px 14px",
+                  background: activeTab === index ? "#401e83" : "#e0e0e0",
+                  color: activeTab === index ? "white" : "#2b2b2b",
+                  border: "1px solid #ccc",
+                  borderRadius: "6px",
+                  cursor: "pointer",
+                  fontWeight: "bold",
+                  transition: "all 0.2s",
+                  fontSize: "14px",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {section.title}
+              </button>
+            ))}
+          </div>
+        )}
         
         {/* 탭 내용 */}
         {/* 🍱 학식 메뉴 탭인 경우 MealMenu 컴포넌트 렌더링 */}
@@ -156,6 +275,17 @@ export default function AcademicDetail({ selected, texts, lang, highlightEvent }
               );
             })}
           </ul>
+        )}
+
+        {/* 모바일: 탭 메뉴 */}
+        {isMobile && isTabMenuOpen && (
+          <MobileTabMenu
+            tabs={data.body.sections}
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            onClose={() => setIsTabMenuOpen(false)}
+            buttonRef={hamburgerRef}
+          />
         )}
       </div>
     );

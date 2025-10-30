@@ -6,6 +6,12 @@ import styled from 'styled-components';
 
 const Container = styled.div`
   padding: 20px;
+  
+  @media (min-width: 769px) {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
 `;
 
 const ScrollContainer = styled.div`
@@ -21,9 +27,16 @@ const ScrollContainer = styled.div`
   -ms-overflow-style: none;
   scrollbar-width: none;
 
+  @media (min-width: 769px) {
+    width: 100%;
+    max-width: 1400px;
+  }
+
   @media (max-width: 768px) {
     margin: 0 -20px;
     padding: 0 20px;
+    display: flex;
+    justify-content: center;
   }
 `;
 
