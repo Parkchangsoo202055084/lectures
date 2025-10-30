@@ -331,7 +331,7 @@ export const SearchBar = ({ onSearch, texts, searchIndex, isMobile }) => {
                                             suggestion.type === "navigation" ? 
                                                 (suggestion.category === "bus" ? "버스 정보" : 
                                                 suggestion.category === "assist" ? "학생지원" : 
-                                                suggestion.category === "newB" ? "재학생 정보" : 
+                                                suggestion.category === "newB" ? "학사 안내" : 
                                                 suggestion.category === "club" ? "동아리" : "기타") : 
                                             "기타"}
                                         </span>
@@ -415,7 +415,7 @@ export const SearchBar = ({ onSearch, texts, searchIndex, isMobile }) => {
                                         suggestion.type === "navigation" ? 
                                             (suggestion.category === "bus" ? "버스 정보" : 
                                             suggestion.category === "assist" ? "학생지원" : 
-                                            suggestion.category === "newB" ? "재학생 정보" : 
+                                            suggestion.category === "newB" ? "학사 안내" : 
                                             suggestion.category === "club" ? "동아리" : "기타") : 
                                         "기타"}
                                     </span>
