@@ -28,7 +28,7 @@ import {
   CommentText,
   CommentForm,
   InfoBox
-} from "./CommunityStyles";
+} from "../../css/CommunityStyles";
 
 // 글쓰기 모달
 export const WritePostModal = ({ 

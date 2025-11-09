@@ -24,7 +24,7 @@ import {
   Button,
   UserList,
   UserItem
-} from "./CommunityStyles";
+} from "../../css/CommunityStyles";
 
 export default function Community() {
   const [activeTab, setActiveTab] = useState('qa');

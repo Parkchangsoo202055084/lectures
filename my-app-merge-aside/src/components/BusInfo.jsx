@@ -1,31 +1,13 @@
 // src/components/BusInfo.jsx
 
 import React from "react";
-import styled from "styled-components";
 import BusLiveMap from "./BusLiveMap";
-
-const BusInfoContainer = styled.div`
-  padding: 20px;
-`;
-
-const Title = styled.h2`
-  color: #333;
-  margin-bottom: 20px;
-`;
-
-const ImageContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-`;
-
-const InfoImage = styled.img`
-  max-width: 100%;
-  height: auto;
-  border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  margin-bottom: 20px;
-`;
+import {
+  BusInfoContainer,
+  Title,
+  ImageContainer,
+  InfoImage
+} from '../css/BusInfoStyles';
 
 const BusInfo = ({ selected, texts }) => {
   const busData = texts.busInfo[selected];
